@@ -39,6 +39,8 @@ function HAProxy(socket, options) {
   this.load();
 }
 
+HAProxy.prototype.__proto__ = EventEmitter.prototype;
+
 /**
  * Send a command to the HAProxy socket.
  *
@@ -47,9 +49,15 @@ function HAProxy(socket, options) {
  */
 HAProxy.prototype.send = function send(command) {
   var socket = net.connect(this.socket)
+    , using = 'object'
     , buffer = ''
     , self = this
     , fn = noop;
+
+  //
+  // Format the command.
+  //
+  command = format.apply(format, arguments).trim();
 
   //
   // Set the correct encoding so we don't break on utf-8 chars while we are
@@ -58,7 +66,6 @@ HAProxy.prototype.send = function send(command) {
   socket.setEncoding('utf8');
 
   socket.once('connect', function connect() {
-    command = format.apply(format, arguments).trim();
     socket.end(command +'\n');
   }).on('data', function data(chunk) {
     buffer += chunk;
@@ -72,7 +79,7 @@ HAProxy.prototype.send = function send(command) {
     socket.destroy();
     fn = noop;
   }).once('end', function end() {
-    self.parse(buffer, fn);
+    self.parse(using, buffer, fn);
     buffer = '';
   });
 
@@ -87,6 +94,16 @@ HAProxy.prototype.send = function send(command) {
      */
     call: function call(callback) {
       if ('function' === typeof callback) fn = callback;
+      return this;
+    },
+
+    /**
+     *
+     * @param {String} parser How should the response be parsed?
+     */
+    as: function as(parser) {
+      if (parser) using = parser;
+
       return this;
     },
 
@@ -106,11 +123,21 @@ HAProxy.prototype.send = function send(command) {
 /**
  * Parses the response from the HAProxy socket.
  *
+ * @param {String} as How should the data be parsed
  * @param {String} buffer The response from the socket
  * @param {Functon} fn Callback function.
  */
-HAProxy.prototype.parse = function parse(buffer, fn) {
- var result = buffer.split('\n');
+HAProxy.prototype.parse = function parse(as, buffer, fn) {
+  var result = buffer.split('\n').reduce(function reducer(data, line) {
+    line = line.trim();
+
+    var ignore = !line || line.charAt(0) === '#';
+    if (ignore) return data;
+
+    return data;
+  }, {});
+
+  fn(undefined, result);
 };
 
 /**
@@ -287,7 +314,7 @@ HAProxy.prototype.stat = function stat(id, type, sid, fn) {
 };
 
 /**
- * Read the HAProxy configuration file
+ * Read the HAProxy configuration file.
  *
  * @param {String} path The location of the config file.
  * @api public
@@ -296,8 +323,19 @@ HAProxy.prototype.load = function load(path) {
   var cfg = fs.readFileSync(path || this.config, 'utf-8');
 };
 
+/**
+ * Save the HAProxy configuration file again.
+ *
+ * @param {String} path The location of the config file.
+ * @api public
+ */
 HAProxy.prototype.save = function save(path) {
   var cfg = '';
 
   fs.writeFileSync(path || this.config, 'utf-8');
 };
+
+//
+// Expose the module.
+//
+module.exports = HAProxy;
