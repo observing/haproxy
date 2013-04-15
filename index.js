@@ -123,16 +123,26 @@ HAProxy.prototype.send = function send(command) {
 /**
  * Parses the response from the HAProxy socket.
  *
- * @param {String} as How should the data be parsed
+ * @param {String} using How should the data be parsed
  * @param {String} buffer The response from the socket
  * @param {Functon} fn Callback function.
  */
-HAProxy.prototype.parse = function parse(as, buffer, fn) {
+HAProxy.prototype.parse = function parse(using, buffer, fn) {
   var result = buffer.split('\n').reduce(function reducer(data, line) {
     line = line.trim();
 
     var ignore = !line || line.charAt(0) === '#';
     if (ignore) return data;
+
+    //
+    // Figure out how we are going to parse the response.
+    //
+    if ('object' === using) {
+      var kv = line.split(':');
+
+      kv[1] = kv[1].trim();
+      data[kv[0]] = !isNaN(+kv[1]) ? +kv[1] : kv[1];
+    }
 
     return data;
   }, {});
