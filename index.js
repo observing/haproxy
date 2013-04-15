@@ -3,6 +3,7 @@
 var EventEmitter = require('events').EventEmitter
   , format = require('util').format
   , net = require('net')
+  , csv = require('csv')
   , fs = require('fs');
 
 //
@@ -57,7 +58,7 @@ HAProxy.prototype.send = function send(command) {
   //
   // Format the command.
   //
-  command = format.apply(format, arguments).trim();
+  command = format.apply(format, arguments).trim().replace(/\%[sdj]/g, '');
 
   //
   // Set the correct encoding so we don't break on utf-8 chars while we are
@@ -79,7 +80,7 @@ HAProxy.prototype.send = function send(command) {
     socket.destroy();
     fn = noop;
   }).once('end', function end() {
-    self.parse(using, buffer, fn);
+    self.parse(using, buffer.trim(), fn);
     buffer = '';
   });
 
@@ -98,10 +99,12 @@ HAProxy.prototype.send = function send(command) {
     },
 
     /**
+     * Add a custom response parser.
      *
      * @param {String} parser How should the response be parsed?
+     * @api private
      */
-    as: function as(parser) {
+    using: function as(parser) {
       if (parser) using = parser;
 
       return this;
@@ -128,26 +131,41 @@ HAProxy.prototype.send = function send(command) {
  * @param {Functon} fn Callback function.
  */
 HAProxy.prototype.parse = function parse(using, buffer, fn) {
-  var result = buffer.split('\n').reduce(function reducer(data, line) {
-    line = line.trim();
+  var result, err;
 
-    var ignore = !line || line.charAt(0) === '#';
-    if (ignore) return data;
+  //
+  // Received an emptry response from the socket
+  //
+  if (!buffer) return fn(undefined, true);
 
-    //
-    // Figure out how we are going to parse the response.
-    //
-    if ('object' === using) {
-      var kv = line.split(':');
+  if (~buffer.indexOf('\n')) {
+    result = buffer.split('\n').reduce(function reducer(data, line) {
+      line = line.trim();
 
-      kv[1] = kv[1].trim();
-      data[kv[0]] = !isNaN(+kv[1]) ? +kv[1] : kv[1];
-    }
+      var comment = line.charAt(0) === '#';
+      if (!line) return data;
 
-    return data;
-  }, {});
+      //
+      // Figure out how we are going to parse the response.
+      //
+      if ('object' === using) {
+        var kv = line.split(':');
 
-  fn(undefined, result);
+        kv[1] = kv[1].trim();
+        data[kv[0]] = !isNaN(+kv[1]) ? +kv[1] : kv[1];
+      }
+
+      return data;
+    }, {});
+  } else if (~buffer.indexOf('initial')) {
+    var data = /(\d*)\s\(initial\s(\d*)\)/.exec(buffer);
+    result = { current: data[1], initial: data[2] };
+  } else {
+    err = new Error(buffer);
+    buffer = result;
+  }
+
+  fn(err, result || buffer);
 };
 
 /**
@@ -161,6 +179,11 @@ HAProxy.prototype.parse = function parse(using, buffer, fn) {
  * @api public
  */
 HAProxy.prototype.clear = function clear(all, fn) {
+  if ('function' === typeof all) {
+    fn = all;
+    all = null;
+  }
+
   return this.send('clear counters %s', all ? ' all' : '').call(fn);
 };
 
@@ -183,12 +206,11 @@ HAProxy.prototype.disable = function disable(backend, server, fn) {
  *
  * @param {String} backend Name of the backend.
  * @param {String} server The server that needs to be disabled in the backend.
- * @param {String} weight The weight of the server.
  * @param {Function} fn Callback
  * @api public
  */
-HAProxy.prototype.enable = function enable(backend, server, weight, fn) {
-  return this.send('enable server %s/%s %d', backend, server, weight || '').call(fn);
+HAProxy.prototype.enable = function enable(backend, server, fn) {
+  return this.send('enable server %s/%s', backend, server).call(fn);
 };
 
 /**
@@ -218,12 +240,18 @@ HAProxy.prototype.pause = function pause(frontend, fn) {
 /**
  * Show the server errors.
  *
+ * @TODO requires custom
  * @param {String} id Only show the errors for this backend/frontend.
  * @param {Function} fn Callback.
  * @api public
  */
 HAProxy.prototype.errors = function errors(id, fn) {
-  return this.send('show errors %id', id || '').call(fn);
+  if ('function' === typeof id) {
+    fn = id;
+    id = null;
+  }
+
+  return this.send('show errors %s', id || '').using('error').call(fn);
 };
 
 /**
@@ -248,7 +276,7 @@ HAProxy.prototype.weight = function weight(backend, server, fn) {
  * @param {Function} fn Callback.
  * @api public
  */
-HAProxy.prototype.weight = function weights(backend, server, weight, fn) {
+HAProxy.prototype.weighting = function weights(backend, server, weight, fn) {
   return this.send('set weight %s/%s %s', backend, server, weight).call(fn);
 };
 
@@ -290,11 +318,11 @@ HAProxy.prototype.compression = function compression(value, fn) {
 /**
  * Dumps information about the haproxy status.
  *
- * @param {Function} fn Callback
+ * @param {Function} fn Callback.
  * @api public
  */
 HAProxy.prototype.info = function info(fn) {
-  return this.send('show info').call(fn);
+  return this.send('show info').using('object').call(fn);
 };
 
 /**
@@ -306,6 +334,11 @@ HAProxy.prototype.info = function info(fn) {
  * @api public
  */
 HAProxy.prototype.session = function session(id, fn) {
+  if ('function' === typeof id) {
+    fn = id;
+    id = null;
+  }
+
   return this.send('show sess %s', id || '').call(fn);
 };
 
@@ -320,7 +353,7 @@ HAProxy.prototype.session = function session(id, fn) {
  * @api public
  */
 HAProxy.prototype.stat = function stat(id, type, sid, fn) {
-  return this.send('show stat %s %s %s', id || '', type || '', sid || '').call(fn);
+  return this.send('show stat %s %s %s', id || '-1', type || '-1', sid || '-1').using('csv').call(fn);
 };
 
 /**

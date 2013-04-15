@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "description": "HAProxy management module",
   "main": "index.js",
-  "dependencies": {},
+  "dependencies": {
+    "csv": "~0.3.0"
+  },
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
