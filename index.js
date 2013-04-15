@@ -2,7 +2,8 @@
 
 var EventEmitter = require('events').EventEmitter
   , format = require('util').format
-  , net = require('net');
+  , net = require('net')
+  , fs = require('fs');
 
 //
 // Default function
@@ -21,6 +22,8 @@ function noop() {}
  * @api public
  */
 function HAProxy(socket, options) {
+  options = options || {};
+
   //
   // Allow variable arguments, with socket path or just custom options.
   //
@@ -30,6 +33,10 @@ function HAProxy(socket, options) {
   }
 
   this.socket = socket || '/tmp/haproxy.sock';
+  this.config = options.config || '/etc/haproxy/haproxy.cfg';
+  this.cfg = {};
+
+  this.load();
 }
 
 /**
@@ -44,6 +51,10 @@ HAProxy.prototype.send = function send(command) {
     , self = this
     , fn = noop;
 
+  //
+  // Set the correct encoding so we don't break on utf-8 chars while we are
+  // buffering the response.
+  //
   socket.setEncoding('utf8');
 
   socket.once('connect', function connect() {
@@ -62,13 +73,33 @@ HAProxy.prototype.send = function send(command) {
     fn = noop;
   }).once('end', function end() {
     self.parse(buffer, fn);
+    buffer = '';
   });
 
   return {
+    /**
+     * Set the callback function for the command. By doing this later we can
+     * have fire & forget functionality. Or just a better API;
+     *
+     * @param {Function} callback The callback for the command.
+     * @returns {Object} The callback sugar.
+     * @api public
+     */
     call: function call(callback) {
       if ('function' === typeof callback) fn = callback;
       return this;
-    }
+    },
+
+    /**
+     * Chain support:
+     *
+     *   haproxy.clear().and.disable(backend, server).and.pause(backend, server);
+     *
+     * It just returns a reference to the `haproxy` instance.
+     *
+     * @type {HAProxy}
+     */
+    and: self
   };
 };
 
@@ -253,4 +284,20 @@ HAProxy.prototype.session = function session(id, fn) {
  */
 HAProxy.prototype.stat = function stat(id, type, sid, fn) {
   return this.send('show stat %s %s %s', id || '', type || '', sid || '').call(fn);
+};
+
+/**
+ * Read the HAProxy configuration file
+ *
+ * @param {String} path The location of the config file.
+ * @api public
+ */
+HAProxy.prototype.load = function load(path) {
+  var cfg = fs.readFileSync(path || this.config, 'utf-8');
+};
+
+HAProxy.prototype.save = function save(path) {
+  var cfg = '';
+
+  fs.writeFileSync(path || this.config, 'utf-8');
 };
