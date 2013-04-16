@@ -1,6 +1,7 @@
 'use strict';
 
-var net = require('net');
+var net = require('net')
+  , fs = require('fs');
 
 /**
  * Create new HA proxy mock server.
@@ -20,9 +21,10 @@ exports.createServer = function createServer(options) {
  * @api private
  */
 function Hamock(options) {
-  this.server = options.server || net.createServer();
+  this.server = options.server || net.createServer({ allowHalfOpen: true });
   this.server.on('connection', this.handle.bind(this));
   this.commands = options.commands || require('./fixtures');
+  this.socket = '/tmp/haproxy.sock';
   this.sockets = [];
 }
 
@@ -65,7 +67,10 @@ Hamock.prototype.listen = function listen(path, fn) {
     path = null;
   }
 
-  this.server(path || '/tmp/haproxy.sock', fn);
+  if (path) this.socket = path;
+
+  fs.unlinkSync(this.socket);
+  this.server.listen(this.socket, fn);
   return this;
 };
 
@@ -82,6 +87,11 @@ Hamock.prototype.close = function close(fn) {
     if (socket.unref) socket.unref();
   });
 
-  this.server.close(fn);
+  this.server.close(function closed() {
+    fs.unlinkSync(this.socket);
+
+    if (fn) fn.apply(fn, arguments);
+  }.bind(this));
+
   return this;
 };
