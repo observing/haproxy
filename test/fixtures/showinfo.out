@@ -1,0 +1,29 @@
+Name: HAProxy
+Version: 1.5-dev18
+Release_date: 2013/04/03
+Nbproc: 1
+Process_num: 1
+Pid: 53812
+Uptime: 0d 0h08m10s
+Uptime_sec: 490
+Memmax_MB: 0
+Ulimit-n: 65567
+Maxsock: 65567
+Maxconn: 32768
+Hard_maxconn: 32768
+Maxpipes: 0
+CurrConns: 28
+PipesUsed: 0
+PipesFree: 0
+ConnRate: 156
+ConnRateLimit: 0
+MaxConnRate: 512
+CompressBpsIn: 0
+CompressBpsOut: 0
+CompressBpsRateLim: 0
+Tasks: 33
+Run_queue: 1
+Idle_pct: 89
+node: Arnouts-MacBook-Air.local
+description: 
+
