@@ -35,8 +35,6 @@ function HAProxy(socket, options) {
 
   this.socket = socket || '/tmp/haproxy.sock';                // Path to socket
   this.config = options.config || '/etc/haproxy/haproxy.cfg'; // Config location
-
-  this.load();
 }
 
 HAProxy.prototype.__proto__ = EventEmitter.prototype;
@@ -76,8 +74,19 @@ HAProxy.prototype.send = function send(command) {
     // We've received an error on the socket, bailout, close the connection and
     // just override the callback so we don't execute it twice.
     //
-    socket.destroy();
-    fn = noop;
+    socket.destroy();   // Nuke the socket, just for fun.
+    buffer = '';        // Kill the buffer, saves memory.
+    fn = noop;          // Prevent double callback.
+
+    //
+    // If it has failed to connect we want to emit that the proxy as we assume
+    // that the proxy should always be alive and kicking with a socket.. Or you
+    // wouldn't be using the module. We need to check for the syscall because
+    // there are to much error codes to take care of
+    //
+    if (err.syscall === 'connect') {
+      self.emit('haproxy:down', err);
+    }
   }).once('end', function end() {
     self.parse(using, buffer.trim(), fn);
     buffer = '';

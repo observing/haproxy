@@ -4,13 +4,15 @@
   "description": "HAProxy management module",
   "main": "index.js",
   "dependencies": {
-    "dsv": "0.0.1"
+    "dsv": "0.0.x"
   },
   "devDependencies": {
-    "pre-commit": "0.0.3"
+    "pre-commit": "0.0.x",
+    "mocha": "1.9.x",
+    "chai": "1.5.x"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "./node_modules/.bin/mocha $(find test -name '*.test.js')"
   },
   "repository": {
     "type": "git",
