@@ -158,6 +158,14 @@ module.exports.read = function read(location, callback) {
 };
 
 /**
+ * Verify the current config by using HAProxies check.
+ */
+module.exports.verify = function verify() {
+  // Spawn child and use haproxy -c -f </tmp/config>
+  // Keys validation and error throwing can be removed then.
+};
+
+/**
  * Write the config to file, composer type is aquired from file extension.
  *
  * @param {String} location file location
