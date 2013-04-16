@@ -4,8 +4,7 @@
   "description": "HAProxy management module",
   "main": "index.js",
   "dependencies": {
-    "dsv": "0.0.x",
-    "utile": "0.2.x"
+    "dsv": "0.0.x"
   },
   "devDependencies": {
     "pre-commit": "0.0.x",

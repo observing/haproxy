@@ -4,8 +4,7 @@
  * Native modules.
  */
 var fs = require('fs')
-  , path = require('path')
-  , util = require('utile');
+  , path = require('path');
 
 /**
  * Required defaults.
@@ -33,7 +32,7 @@ var compose = {
      * @api private
      */
     json: function stringify(data) {
-      var clone = util.clone(data);
+      var clone = JSON.parse(JSON.stringify(data));
 
       // Remove commentary as it has no place in JSON.
       Object.keys(clone).forEach(function removeComments(key) {
