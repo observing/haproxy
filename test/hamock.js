@@ -69,7 +69,11 @@ Hamock.prototype.listen = function listen(path, fn) {
 
   if (path) this.socket = path;
 
-  fs.unlinkSync(this.socket);
+  //
+  // Clean up the existing socket so we can connect.
+  //
+  if (fs.existsSync(this.socket)) fs.unlinkSync(this.socket);
+
   this.server.listen(this.socket, fn);
   return this;
 };
@@ -88,8 +92,7 @@ Hamock.prototype.close = function close(fn) {
   });
 
   this.server.close(function closed() {
-    fs.unlinkSync(this.socket);
-
+    if (fs.existsSync(this.socket)) fs.unlinkSync(this.socket);
     if (fn) fn.apply(fn, arguments);
   }.bind(this));
 
