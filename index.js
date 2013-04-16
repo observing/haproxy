@@ -30,12 +30,11 @@ function HAProxy(socket, options) {
   //
   if ('object' === typeof socket) {
     options = socket;
-    socket = null;
+    socket = options.socket || null;
   }
 
-  this.socket = socket || '/tmp/haproxy.sock';
-  this.config = options.config || '/etc/haproxy/haproxy.cfg';
-  this.cfg = {};
+  this.socket = socket || '/tmp/haproxy.sock';                // Path to socket
+  this.config = options.config || '/etc/haproxy/haproxy.cfg'; // Config location
 
   this.load();
 }

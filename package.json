@@ -6,7 +6,9 @@
   "dependencies": {
     "dsv": "0.0.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "pre-commit": "0.0.3"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
