@@ -3,7 +3,7 @@
 var EventEmitter = require('events').EventEmitter
   , format = require('util').format
   , net = require('net')
-  , csv = require('csv')
+  , dsv = require('dsv')
   , fs = require('fs');
 
 //
@@ -138,15 +138,25 @@ HAProxy.prototype.parse = function parse(using, buffer, fn) {
   //
   if (!buffer) return fn(undefined, true);
 
-  if (~buffer.indexOf('\n')) {
+  if ('csv' === using ) {
+    //
+    // The column of the csv is commented, so we have to remove the first to
+    // chars from the buffer so we have a correct column for the csv and then we
+    // can actually parse it
+    //
+    result = dsv.csv.parse(buffer.slice(2)).map(function cleanup(row) {
+      delete row[''];
+      return row;
+    });
+  } else if (~buffer.indexOf('\n')) {
     result = buffer.split('\n').reduce(function reducer(data, line) {
       line = line.trim();
-
-      var comment = line.charAt(0) === '#';
       if (!line) return data;
 
       //
-      // Figure out how we are going to parse the response.
+      // Figure out how we are going to parse the response. Nearly every
+      // response from thing thing requires a dedicated parser ._. because fuck
+      // consistency right?
       //
       if ('object' === using) {
         var kv = line.split(':');
