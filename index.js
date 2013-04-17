@@ -418,6 +418,17 @@ HAProxy.prototype.save = function save(path) {
 };
 
 //
+// The following methods are proxied from the Orchestrator. For relevant
+// documentation please see the orchestrator.js
+//
+['start', 'stop', 'reload', 'verify', 'running'].forEach(function each(method) {
+  HAProxy.prototype[method] = function proxy() {
+    this.orchestrator[method].apply(this.orchestrator, arguments);
+    return this;
+  };
+});
+
+//
 // Expose the module.
 //
 module.exports = HAProxy;

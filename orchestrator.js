@@ -215,7 +215,7 @@ Orchestrator.prototype.running = function running(fn) {
  * Read out the process id a.k.a. pid file.
  *
  * @param {Function} fn Callback.
- * @api public
+ * @api private
  */
 Orchestrator.prototype.read = function read(fn) {
   if (!this.pidFile) {
