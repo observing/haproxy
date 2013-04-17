@@ -1,19 +1,29 @@
 'use strict';
 
 var EventEmitter = require('events').EventEmitter
+  , Orchestrator = require('./orchestrator')
   , format = require('util').format
   , net = require('net')
   , dsv = require('dsv')
   , fs = require('fs');
 
 //
-// Default function
+// Default function.
 //
 function noop() {}
 
 /**
  * Control your HAProxy servers using the unix domain socket. This module is
  * based upon the 1.5 branch socket.
+ *
+ * Options:
+ *
+ * - pid: The pid file
+ * - pidFile: The location of the pid file
+ * - config: The location of the configuration file
+ * - discover: Tries to find your HAProxy instance if you don't know the pid
+ * - socket: The location of the unix socket
+ * - [optional] which: The location of the haproxy
  *
  * @see http://cbonte.github.io/haproxy-dconv/configuration-1.5.html#9.2
  *
@@ -35,6 +45,17 @@ function HAProxy(socket, options) {
 
   this.socket = socket || '/tmp/haproxy.sock';                // Path to socket
   this.config = options.config || '/etc/haproxy/haproxy.cfg'; // Config location
+
+  //
+  // Create a new `haproxy` orchestrator which interacts with the binary.
+  //
+  this.orchestrator = new Orchestrator({
+    which: options.which,
+    pid: options.pid,
+    pidFile: options.pidFile,
+    discover: options.discover,
+    config: this.config
+  });
 }
 
 HAProxy.prototype.__proto__ = EventEmitter.prototype;
@@ -42,7 +63,7 @@ HAProxy.prototype.__proto__ = EventEmitter.prototype;
 /**
  * Send a command to the HAProxy socket.
  *
- * @param {String} command The
+ * @param {String} command The command template
  * @api private
  */
 HAProxy.prototype.send = function send(command) {
@@ -55,7 +76,7 @@ HAProxy.prototype.send = function send(command) {
   //
   // Format the command.
   //
-  command = format.apply(format, arguments).trim().replace(/\%[sdj]/g, '');
+  command = format.apply(format, arguments).replace(/\%[sdj]/g, '').trim();
 
   //
   // Set the correct encoding so we don't break on utf-8 chars while we are

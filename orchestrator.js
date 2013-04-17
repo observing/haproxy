@@ -56,7 +56,7 @@ Orchestrator.prototype.run = function ran() {
   //
   // Parse the template and create the command.
   //
-  var cmd = format.apply(format, [template].concat(args));
+  var cmd = format.apply(format, [template].concat(args)).replace(/\%[sdj]/g, '').trim();
 
   run(cmd, function execution(err, stdout, stderr) {
     stdout = stdout.toString().trim();
@@ -99,8 +99,12 @@ Orchestrator.prototype.start = function start(fn) {
       if (err && !err.stderr) return fn.call(this, err);
       var warnings = err && err.stderr ? err.stderr : undefined;
 
-      // @TODO find the pid file & pid
-      fn.call(this, undefined, warnings);
+      this.read(function reader() {
+        //
+        // We don't really care if we got errors or not.
+        //
+        fn.call(this, undefined, warnings);
+      });
     });
   });
 };
@@ -112,17 +116,22 @@ Orchestrator.prototype.start = function start(fn) {
  * @api public
  */
 Orchestrator.prototype.stop = function stop(fn) {
-  if (this.pid) return this.run('kill %s', this.pid, function ran(err) {
-    if (err) return this.run('kill -9 %s', this.pid, function again(err) {
+  if (this.pid) return this.run('kill %s', this.pid, function ran(err, output) {
+    if (err) return this.run('kill -9 %s', this.pid, function again(err, output) {
+      if (err) return fn.call(this, err);
 
+      this.pid = null;
+      fn.call(this, undefined, !output);
     });
 
-    fn.call(this, undefined, true);
+    this.pid = null;
+    fn.call(this, undefined, !output);
   });
 
   return this.run('killall haproxy', function ran(err, output) {
     if (err) return fn.call(this, err);
 
+    this.pid = null;
     fn.call(this, undefined, !output);
   });
 };
