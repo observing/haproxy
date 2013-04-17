@@ -10,6 +10,7 @@ var run = require('child_process').exec
  * - pid: The pid file
  * - pidFile: The location of the pid file
  * - config: The location of the configuration file
+ * - discover: Tries to find your HAProxy instance if you don't know the pid
  * - [optional] which: The location of the haproxy
  *
  * @constructor
@@ -23,6 +24,12 @@ function Orchestrator(options) {
   this.pid = options.pid || null;
   this.pidFile = options.pidFile;
   this.config = options.config;
+  this.discover = options.discover || false;
+
+  //
+  // Discover a running process.
+  //
+  if (this.discover && !this.pid) this.read();
 }
 
 /**
@@ -56,7 +63,13 @@ Orchestrator.prototype.run = function ran() {
     stderr = stderr.toString().trim();
 
     if (err) return callback(err, undef, cmd);
-    if (stderr.length) return callback(new Error(stderr), undef, cmd);
+
+    if (stderr.length) {
+      err = new Error(stderr);
+      err.stderr = true;
+
+      return callback(err, undef, cmd);
+    }
 
     callback(undef, stdout, cmd);
   });
@@ -76,9 +89,19 @@ Orchestrator.prototype.start = function start(fn) {
   // will default to a common location for pid files.
   //
   if (!this.pidFile) this.pidFile = '/var/run/haproxy.pid';
+  return this.verify(function verified(err) {
+    if (err) fn.call(this, err);
 
-  return this.run('haproxy -D -f %s -p %s', this.pidFile, function ran(err) {
+    this.run('haproxy -D -f %s -p %s', this.config, this.pidFile, function ran(err) {
+      //
+      // It could be that it outputs some warnings
+      //
+      if (err && !err.stderr) return fn.call(this, err);
+      var warnings = err && err.stderr ? err.stderr : undefined;
 
+      // @TODO find the pid file & pid
+      fn.call(this, undefined, warnings);
+    });
   });
 };
 
