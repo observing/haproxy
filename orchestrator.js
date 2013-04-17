@@ -21,13 +21,8 @@ function Orchestrator(options) {
 
   this.which = options.which || require('which').sync('haproxy');
   this.pid = options.pid || null;
-  this.pidfile = options.pidfile;
+  this.pidFile = options.pidFile;
   this.config = options.config;
-
-  //
-  // If we don't know the pid, we should read out the file.
-  //
-  if (!this.pid) this.read();
 }
 
 /**
@@ -39,8 +34,9 @@ function Orchestrator(options) {
  */
 Orchestrator.prototype.run = function ran() {
   var args = Array.prototype.slice.call(arguments, 0)
+    , callback = args.pop().bind(this)
     , template = args.shift()
-    , callback = args.pop();
+    , undef;
 
   //
   // update the `haproxy` part with a the actual location of the binary. We just
@@ -50,8 +46,19 @@ Orchestrator.prototype.run = function ran() {
     template = this.which + template.slice(7);
   }
 
-  run(format.apply(format, args), function execution() {
+  //
+  // Parse the template and create the command.
+  //
+  var cmd = format.apply(format, [template].concat(args));
 
+  run(cmd, function execution(err, stdout, stderr) {
+    stdout = stdout.toString().trim();
+    stderr = stderr.toString().trim();
+
+    if (err) return callback(err, undef, cmd);
+    if (stderr.length) return callback(new Error(stderr), undef, cmd);
+
+    callback(undef, stdout, cmd);
   });
 
   return this;
@@ -86,10 +93,14 @@ Orchestrator.prototype.stop = function stop(fn) {
     if (err) return this.run('kill -9 %s', this.pid, function again(err) {
 
     });
+
+    fn.call(this, undefined, true);
   });
 
-  return this.run('killall haproxy', function ran(err) {
+  return this.run('killall haproxy', function ran(err, output) {
+    if (err) return fn.call(this, err);
 
+    fn.call(this, undefined, !output);
   });
 };
 
@@ -104,8 +115,12 @@ Orchestrator.prototype.reload = function reload(hard, fn) {
   var cmd = 'haproxy -D -f %s -p %s -sf %s';
   if (hard) cmd = 'haproxy -D -f %s -p %s -st %s';
 
-  return this.run(cmd, this.config, this.pidFile, this.pid, function ran() {
+  return this.verify(function verified(err) {
+    if (err) return fn.call(this, err);
 
+    this.run(cmd, this.config, this.pidFile, this.pid, function ran() {
+
+    });
   });
 };
 
@@ -116,9 +131,7 @@ Orchestrator.prototype.reload = function reload(hard, fn) {
  * @api public
  */
 Orchestrator.prototype.verify = function verify(fn) {
-  return this.run('haproxy -c -f %s', this.config, function ran() {
-
-  });
+  return this.run('haproxy -c -f %s', this.config, fn.bind(this));
 };
 
 /**
@@ -128,8 +141,18 @@ Orchestrator.prototype.verify = function verify(fn) {
  * @api public
  */
 Orchestrator.prototype.running = function running(fn) {
-  return this.run('ps -p %s -o command', this.pid, function ran() {
+  // We don't have a pid, fetch it and re-retry
+  if (!this.pid) return this.read(function read(err, pid) {
+    if (err) return fn.call(this, err);
+    if (this.pid) return this.running(fn);
 
+    // We don't have a pid or we were unable to find it which is probably an
+    // indication of no processes live, no need to continue onwards!
+    fn.call(this, undefined, false);
+  });
+
+  return this.run('ps -p %s -o args=', this.pid, function ran(err) {
+    fn.call(this, undefined, !err);
   });
 };
 
@@ -140,9 +163,11 @@ Orchestrator.prototype.running = function running(fn) {
  * @api public
  */
 Orchestrator.prototype.read = function read(fn) {
-  if (this.pidFile) {
-    fs.readFile(this.pidFile, function reader() {
+  if (!this.pidFile) {
+    fs.readFile(this.pidFile, 'utf-8', function reader(err, pid) {
+      this.pid = pid || null;
 
+      if (fn) fn.call(this, err, pid);
     }.bind(this));
     return this;
   }
@@ -150,8 +175,22 @@ Orchestrator.prototype.read = function read(fn) {
   //
   // We don't have a pid file, so maybe we have a process running.
   //
-  return this.run('ps x -o command | grep haproxy', function find() {
+  return this.run('ps x -o args=,pid | grep haproxy', function find(err, processes, cmd) {
+    if (err) return fn && fn.call(this, err);
 
+    //
+    // Parse the process list, we get it returned with <pid> <process>
+    //
+    processes = processes.split('\n').filter(function filter(process) {
+      return !(~process.indexOf('grep haproxy') || !process);
+    }).map(function map(process) {
+      // @TODO try to parse the arguments out of the process if we don't have
+      // a `pidFile` specified.
+      return process.split(' ').pop();
+    });
+
+    this.pid = processes[0];
+    if (fn) fn.call(this, undefined, this.pid);
   });
 };
 
