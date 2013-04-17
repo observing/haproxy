@@ -18,7 +18,7 @@ function noop() {}
  *
  * Options:
  *
- * - pid: The pid file
+ * - pid: The process id
  * - pidFile: The location of the pid file
  * - config: The location of the configuration file
  * - discover: Tries to find your HAProxy instance if you don't know the pid

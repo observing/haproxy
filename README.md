@@ -32,3 +32,44 @@ global
 
 Reload you configuration to make this change active and you should be ready to
 rock.
+
+# API
+
+```js
+'use strict';
+
+var HAProxy = require('haproxy');
+
+var haproxy = new HAProxy('/optional/socket/path.sock', { /* options */ });
+```
+
+An alternate interface is:
+
+```js
+var haproxy = new HAProxy({ socket: 'path' /*, the rest of the options */});
+```
+
+I personally prefer the first interface as a correct socket path is required for
+a functioning module. The options are not required, but the following options
+are supported:
+
+- `pid`: The process id
+- `pidFile`: The location of the pid file
+- `config`: The location of the configuration file
+- `discover`: Tries to find your HAProxy instance if you don't know the pid
+- `socket`: The location of the unix socket
+- [optional] `which`: The location of the haproxy
+
+The following methods are available:
+
+### HAProxy.clear(all, fn)
+
+Clear the max values of the statistic counts in the proxy for each front-end and
+backend. When the `all` boolean is supplied it will clean all the stats. This
+has the same effect as restarting.
+
+```js
+haproxy.clear(function (err) {
+  // 
+})
+```
