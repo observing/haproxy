@@ -115,8 +115,13 @@ Orchestrator.prototype.start = function start(fn) {
  * @param {Function} fn Callback.
  * @api public
  */
-Orchestrator.prototype.stop = function stop(fn) {
-  if (this.pid) return this.run('kill %s', this.pid, function ran(err, output) {
+Orchestrator.prototype.stop = function stop(all, fn) {
+  if ('function' === typeof all) {
+    fn = all;
+    all = null;
+  }
+
+  if (this.pid && !all) return this.run('kill %s', this.pid, function ran(err, output) {
     if (err) return this.run('kill -9 %s', this.pid, function again(err, output) {
       if (err) return fn.call(this, err);
 
@@ -144,14 +149,32 @@ Orchestrator.prototype.stop = function stop(fn) {
  * @api public
  */
 Orchestrator.prototype.reload = function reload(hard, fn) {
+  if ('function' === typeof hard) {
+    fn = hard;
+    hard = null;
+  }
+
   var cmd = 'haproxy -D -f %s -p %s -sf %s';
   if (hard) cmd = 'haproxy -D -f %s -p %s -st %s';
 
   return this.verify(function verified(err) {
     if (err) return fn.call(this, err);
 
-    this.run(cmd, this.config, this.pidFile, this.pid, function ran() {
+    var current = this.pid;
 
+    this.run(cmd, this.config, this.pidFile, current, function ran(err) {
+      if (err) return fn.call(this, err);
+
+      //
+      // Poll for the change of pid
+      //
+      (function piddy() {
+        this.read(function read(err, pid) {
+          if (pid !== current) return fn.call(this, undefined, true);
+
+          setTimeout(piddy.bind(this), 100);
+        });
+      }.bind(this))();
     });
   });
 };
