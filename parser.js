@@ -10,18 +10,9 @@ var fs = require('fs')
  * Required defaults.
  */
 var config = {}
-  , sections = [ 'global', 'defaults', 'frontend', 'backend', 'listen' ]
-  , keys = {
-        global: [
-            'ca-base', 'chroot', 'crt-base', 'daemon', 'gid', 'group'
-          , 'log', 'log-send-hostname', 'nbproc', 'pidfile', 'uid', 'ulimit-n'
-          , 'user', 'stats', 'node', 'description', 'unix-bind'
-        ]
-      , defaults: []
-      , frontend: []
-      , backend: []
-      , listen: []
-    };
+  , defaults = require('./config')
+  , sections = defaults.sections
+  , keys = defaults.keys;
 
 var compose = {
     /**
