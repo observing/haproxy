@@ -13,7 +13,7 @@
     "chai": "1.5.x"
   },
   "scripts": {
-    "test": "./node_modules/.bin/mocha $(find test -name '*.test.js')"
+    "test": "NODE_ENV=testing ./node_modules/.bin/mocha $(find test -name '*.test.js')"
   },
   "repository": {
     "type": "git",

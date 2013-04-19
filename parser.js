@@ -12,7 +12,9 @@ var fs = require('fs')
 var config = {}
   , defaults = require('./config')
   , sections = defaults.sections
-  , keys = defaults.keys;
+  , names = Object.keys(sections)
+  , maps = defaults.keys
+  , keys = {};
 
 var compose = {
     /**
@@ -95,6 +97,17 @@ function comment(section, key, text) {
 }
 
 /**
+ * Change config strings to suitable function names.
+ *
+ * @param {String} value function name
+ * @return {String}
+ * @api private
+ */
+function functionalize(value) {
+  return value.toLowerCase().replace(/[^a-z]/g, '');
+}
+
+/**
  * Get value of the section-key combination.
  *
  * @param {String} section predefined section
@@ -116,15 +129,14 @@ function get(section, key) {
  * @api private
  */
 function set(section, key, value) {
+  // Check if the current key is allowed to be set on the section.
+  if (!~keys[section].indexOf(key)) return comment;
+
   config[section] = config[section] || {};
   config[section][key] = value;
 
-  // Check if the current key is allowed to be set on the section.
-  if (!~keys[section].indexOf(key)) {
-    throw new Error('Invalid key: '+ key +' for section: '+ section);
-  }
-
-  return { comment: comment.bind(comment, section, key) };
+  // Expose comment function bound to key.
+  return comment.bind(comment, section, key);
 }
 
 /**
@@ -153,7 +165,6 @@ module.exports.read = function read(location, callback) {
  */
 module.exports.verify = function verify() {
   // Spawn child and use haproxy -c -f </tmp/config>
-  // Keys validation and error throwing can be removed then.
 };
 
 /**
@@ -171,19 +182,52 @@ module.exports.write = function write(location, callback) {
 };
 
 /**
+ * Generate allowed config keys per section from the bitmasks.
+ */
+names.forEach(function prepareKeys(section) {
+  var mask = sections[section]
+    , current;
+
+  Object.keys(maps).forEach(function bitmask(bit) {
+    current = keys[section] || [];
+    if (mask & +bit) keys[section] = current.concat(maps[bit]);
+  });
+});
+
+/**
  * Generate some helper methods on each section to quickly set and get values.
  */
-sections.forEach(function prepare(section) {
+names.forEach(function prepareFunctions(section) {
+  var result = {};
+
   // Add getters and setters to each section.
-  module.exports[section] = {};
-  module.exports[section].__proto__ = {
+  result.__proto__ = {
     get: get.bind(get, section),
     set: set.bind(set, section),
     comment: comment.bind(comment, section, 'pre')
   };
+
+  // Also add camelCased proxies for each key in the section.
+  keys[section].forEach(function addProxies(key) {
+    result.__proto__[functionalize(key)] = set.bind(set, section, key);
+  });
+
+  module.exports[section] = result;
 });
 
 /**
  * Export module.
  */
 module.exports.config = config;
+
+/**
+ * Expose additional modules while testing.
+ */
+if (process.env.NODE_ENV === 'testing') {
+  module.exports.set = set;
+  module.exports.get = get;
+  module.exports.parse = parse;
+  module.exports.compose = compose;
+  module.exports.comment = comment;
+  module.exports.functionalize = functionalize;
+}

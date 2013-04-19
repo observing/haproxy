@@ -1,5 +1,7 @@
 /**
- * Config sections and bitmask value
+ * Config sections and bitmasks.
+ *
+ * @type {Object}
  */
 module.exports.sections = {
     global: 1 << 1    // 2
