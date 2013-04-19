@@ -3,11 +3,14 @@ describe('parser', function () {
   'use strict';
 
   var chai = require('chai')
+    , sinon = require('sinon')
+    , sinonChai = require('sinon-chai')
     , expect = chai.expect
     , parser = require('../parser')
     , config = require('../config');
 
   chai.Assertion.includeStack = true;
+  chai.use(sinonChai);
 
   afterEach(function () {
     parser.reset();
@@ -76,46 +79,102 @@ describe('parser', function () {
   it('compose#json creates readable JSON from config');
   it('compose#cfg creates cfg from config');
 
-  it('#set section.key and returns comment function');
-  it('#add value to section.key');
-  it('#add delegate to set if key is undefined');
+  describe('#set', function () {
+    var value = 'something random';
 
-  it('#get returns value from section.key');
+    it('sets section.key and returns comment function', function () {
+      var func = parser.set('defaults', 'backlog', value);
 
-  it('#functionalize returns suitable lowercased function name', function () {
-    var test = {
-        'timeoutclient': 'timeout client'
-      , 'optionacceptinvalidhttprequest': 'option accept-invalid-http-request'
-      , 'tunercvbufclient': 'tune.rcvbuf.client'
-      , 'usebackend': 'use_backend'
-      , 'lolforgiggsoptionhttpproxy': 'lol-for.giggs option http_proxy'
-    };
+      expect(parser.config.defaults.backlog).to.equal(value);
+      expect(func).to.be.a('function');
+    });
 
-    Object.keys(test).forEach(function (key) {
-      expect(parser.functionalize(test[key])).to.equal(key);
+    it('does nothing if the key is not allowed for the section', function () {
+      var func = parser.set('defaults', 'bind', value);
+
+      // Will not have defaults nor bind.
+      expect(parser.config).to.not.have.property('defaults');
+
+      parser.set('defaults', 'backlog', value);
+      parser.set('defaults', 'bind', value);
+
+      // Now will not have bind.
+      expect(parser.config.defaults).to.not.have.property('bind');
+    });
+  });
+
+  describe('#add', function () {
+    var value = 'double content in array';
+
+    it('adds value to section.key if key is already set', function () {
+      parser.set('defaults', 'backlog', value);
+      parser.add('defaults', 'backlog', value);
+
+      expect(parser.config.defaults.backlog.length).to.equal(2);
+      expect(parser.config.defaults.backlog[0]).to.equal(value);
+      expect(parser.config.defaults.backlog[1]).to.equal(value);
+    });
+
+    it('delegate to set if key is undefined', function () {
+      var set = sinon.spy(parser, 'set');
+      parser.add('defaults', 'backlog', value);
+
+      expect(set).to.be.calledOnce;
+      expect(parser.config.defaults.backlog).to.not.be.an('array');
+      expect(parser.config.defaults.backlog).to.be.an('string');
+      expect(parser.config.defaults.backlog).to.equal(value);
+    });
+  });
+
+  describe('#get', function () {
+    it('returns value from section.key', function () {
+      parser.defaults.set('backlog', 'test');
+      expect(parser.get('defaults', 'backlog')).to.equal('test');
+    });
+  });
+
+  describe('#functionalize', function () {
+    it('returns suitable lowercased function name', function () {
+      var test = {
+          'timeoutclient': 'timeout client'
+        , 'optionacceptinvalidhttprequest': 'option accept-invalid-http-request'
+        , 'tunercvbufclient': 'tune.rcvbuf.client'
+        , 'usebackend': 'use_backend'
+        , 'lolforgiggsoptionhttpproxy': 'lol-for.giggs option http_proxy'
+      };
+
+      Object.keys(test).forEach(function (key) {
+        expect(parser.functionalize(test[key])).to.equal(key);
+      });
     });
   });
 
   it('#comment stores commentary related to section.key');
   it('#write stores config to format specified by extension');
 
-  it('#read reads cfg or JSON config to usable object', function (done) {
-    parser.read(__dirname + '/fixtures/default.cfg', function () {
-      done();
+  describe('#read', function () {
+    it('reads cfg or JSON config to usable object', function (done) {
+      parser.read(__dirname + '/fixtures/default.cfg', function () {
+        done();
+      });
     });
   });
 
-  it('#findKey checks if key is start of content', function () {
-    var content = 'mode http';
+  describe('#findKey', function () {
+    it('checks if key is start of content', function () {
+      var content = 'mode http';
 
-    expect(parser.findKey(content, 'mode')).to.be.true;
-    expect(parser.findKey(content, 'http')).to.be.false;
+      expect(parser.findKey(content, 'mode')).to.be.true;
+      expect(parser.findKey(content, 'http')).to.be.false;
+    });
   });
 
-  it('#reset clears the config', function () {
-    parser.config = { test: 'some random key set' };
+  describe('#reset', function () {
+    it('clears the config', function () {
+      parser.config = { test: 'some random key set' };
 
-    parser.reset();
-    expect(Object.keys(parser.config).length).to.equal(0);
+      parser.reset();
+      expect(Object.keys(parser.config).length).to.equal(0);
+    });
   });
 });

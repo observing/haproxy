@@ -187,7 +187,7 @@ function add(section, key, value) {
   config[section] = config[section] || {};
 
   // If this key is undefined just call set.
-  if (!config[section][key]) return set(section, key, value);
+  if (!config[section][key]) return parser.set(section, key, value);
 
   // Convert to array so we can just push to it.
   if (config[section][key] && typeof config[section][key] === 'string') {
@@ -313,6 +313,7 @@ names.forEach(function prepareFunctions(section) {
 if (process.env.NODE_ENV === 'testing') {
   parser.set = set;
   parser.get = get;
+  parser.add = add;
   parser.parse = parse;
   parser.compose = compose;
   parser.comment = comment;

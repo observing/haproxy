@@ -11,6 +11,8 @@
   "devDependencies": {
     "pre-commit": "0.0.x",
     "mocha": "1.9.x",
+    "sinon": "1.6.x",
+    "sinon-chai": "2.3.x",
     "chai": "1.5.x"
   },
   "scripts": {
