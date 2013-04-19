@@ -75,7 +75,11 @@ describe('parser', function () {
   it('parse#cfg reads cfg config from file');
   it('compose#json creates readable JSON from config');
   it('compose#cfg creates cfg from config');
-  it('#set writes specific key to specified section and returns comment function');
+
+  it('#set section.key and returns comment function');
+  it('#add value to section.key');
+  it('#add delegate to set if key is undefined');
+
   it('#get returns value from section.key');
 
   it('#functionalize returns suitable lowercased function name', function () {

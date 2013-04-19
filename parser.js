@@ -110,7 +110,7 @@ var parse = {
 
         // Store the value if we got a key match, and add the comment (if present).
         hash = line.split('#');
-        add = parser[current].set(key, hash[0].substr(key.length).trim())(hash[1]);
+        add = parser[current].add(key, hash[0].substr(key.length).trim())(hash[1]);
       });
 
       return config;
@@ -172,6 +172,36 @@ function get(section, key) {
 }
 
 /**
+ * Adds content to key, transforms value to array if required
+ *
+ * @param {String} section predefined section
+ * @param {String} key
+ * @param {String} value
+ * @return {Object} bind comment to key.
+ * @api private
+ */
+function add(section, key, value) {
+  // Check if the current key is allowed to be set on the section.
+  if (!~keys[section].indexOf(key)) return;
+
+  config[section] = config[section] || {};
+
+  // If this key is undefined just call set.
+  if (!config[section][key]) return set(section, key, value);
+
+  // Convert to array so we can just push to it.
+  if (config[section][key] && typeof config[section][key] === 'string') {
+    config[section][key] = [config[section][key]];
+  }
+
+  // Add the value
+  config[section][key].push(value);
+
+  // Expose comment function bound to key.
+  return comment.bind(comment, section, key);
+}
+
+/**
  * Set the section-key combination to value.
  *
  * @param {String} section predefined section
@@ -182,7 +212,7 @@ function get(section, key) {
  */
 function set(section, key, value) {
   // Check if the current key is allowed to be set on the section.
-  if (!~keys[section].indexOf(key)) return comment;
+  if (!~keys[section].indexOf(key)) return;
 
   config[section] = config[section] || {};
   config[section][key] = value;
@@ -265,6 +295,7 @@ names.forEach(function prepareFunctions(section) {
   result.__proto__ = {
     get: get.bind(get, section),
     set: set.bind(set, section),
+    add: add.bind(add, section),
     comment: comment.bind(comment, section, 'pre')
   };
 
