@@ -1,3 +1,4 @@
+/*globals beforeEach, afterEach*/
 describe('parser', function () {
   'use strict';
 
@@ -7,6 +8,10 @@ describe('parser', function () {
     , config = require('../config');
 
   chai.Assertion.includeStack = true;
+
+  afterEach(function () {
+    parser.reset();
+  });
 
   it('exposes each config section as key', function () {
     Object.keys(config.sections).forEach(function(key) {
@@ -22,7 +27,7 @@ describe('parser', function () {
     });
   });
 
-  it('section specific comment functions add pre-commentary', function () {
+  it('section specific comment functions add commentary.pre', function () {
     var comment = 'add some comment';
 
     parser.defaults.comment(comment);
@@ -89,5 +94,24 @@ describe('parser', function () {
 
   it('#comment stores commentary related to section.key');
   it('#write stores config to format specified by extension');
-  it('#read reads cfg or JSON config to usable object');
+
+  it('#read reads cfg or JSON config to usable object', function (done) {
+    parser.read(__dirname + '/fixtures/default.cfg', function () {
+      done();
+    });
+  });
+
+  it('#findKey checks if key is start of content', function () {
+    var content = 'mode http';
+
+    expect(parser.findKey(content, 'mode')).to.be.true;
+    expect(parser.findKey(content, 'http')).to.be.false;
+  });
+
+  it('#reset clears the config', function () {
+    parser.config = { test: 'some random key set' };
+
+    parser.reset();
+    expect(Object.keys(parser.config).length).to.equal(0);
+  });
 });

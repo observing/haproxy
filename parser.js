@@ -7,15 +7,29 @@ var fs = require('fs')
   , path = require('path');
 
 /**
+ * Third-party modules
+ */
+var _ = require('lodash');
+
+/**
  * Required defaults.
  */
-var config = {}
-  , defaults = require('./config')
+var defaults = require('./config')
   , sections = defaults.sections
   , names = Object.keys(sections)
   , maps = defaults.keys
-  , keys = {};
+  , parser = module.exports
+  , keys = {}
+  , config;
 
+/**
+ * Config storage.
+ */
+parser.config = config = {};
+
+/**
+ * Composer functions.
+ */
 var compose = {
     /**
      * Composer function for JSON, strips comments and utilizes stringify.
@@ -64,6 +78,9 @@ var compose = {
     }
 };
 
+/**
+ * Parse functions.
+ */
 var parse = {
     json: JSON.parse
 
@@ -75,13 +92,46 @@ var parse = {
      * @api private
      */
   , cfg: function cfgParser(data) {
-      return {};
+      var current, hash, section, key, add;
+
+      data.split(/\n/).forEach(function parse(line) {
+        line = line.trim();
+
+        // No content on line just return.
+        if (!line.length) return;
+
+        // Keep track of the section.
+        section = _.find(names, findKey.bind(_, line));
+        if (section) return current = section;
+
+        // Check content against known keys in current section.
+        key = _.find(keys[current], findKey.bind(_, line));
+        if (!key) return;
+
+        // Store the value if we got a key match, and add the comment (if present).
+        hash = line.split('#');
+        add = parser[current].set(key, hash[0].substr(key.length).trim())(hash[1]);
+      });
+
+      return config;
     }
 };
 
 /**
+ * Is config key the first part of the line?
+ *
+ * @param {String} line of content
+ * @param {String} key in config
+ * @return {Boolean}
+ * @api private
+ */
+function findKey(line, key) {
+  return line.indexOf(key) === 0;
+}
+
+/**
  * Add comment to section-key combinations. General section comments are added
- * to `commentary.pre`.
+ * to `commentary.pre`. Return early if there is no actual text.
  *
  * @param {String} section predefined section
  * @param {String} key
@@ -90,10 +140,12 @@ var parse = {
  * @api private
  */
 function comment(section, key, text) {
+  if (!text) return;
+
   config[section] = config[section] || {};
   config[section].commentary = config[section].commentary || {};
 
-  return config[section].commentary[key] = text;
+  return config[section].commentary[key] = text.trim();
 }
 
 /**
@@ -146,14 +198,14 @@ function set(section, key, value) {
  * @param {Function} callback
  * @api public
  */
-module.exports.read = function read(location, callback) {
+parser.read = function read(location, callback) {
   var type = path.extname(location).substr(1);
   if (!(type in compose)) {
     throw new Error('Supplied file with extension: '+ type +' cannot be parsed');
   }
 
   // Read the file and pull content through the right parser.
-  fs.writeFile(location, 'utf-8', function parseFile(err, data) {
+  fs.readFile(location, 'utf-8', function parseFile(err, data) {
     if (err) throw err;
 
     callback(null, parse[type].call(this, data));
@@ -163,7 +215,7 @@ module.exports.read = function read(location, callback) {
 /**
  * Verify the current config by using HAProxies check.
  */
-module.exports.verify = function verify() {
+parser.verify = function verify() {
   // Spawn child and use haproxy -c -f </tmp/config>
 };
 
@@ -174,11 +226,20 @@ module.exports.verify = function verify() {
  * @param {Function} callback
  * @api public
  */
-module.exports.write = function write(location, callback) {
+parser.write = function write(location, callback) {
   var type = path.extname(location).substr(1);
   if (!(type in compose)) type = 'json';
 
   fs.writeFile(location, compose[type].call(this, config), callback);
+};
+
+/**
+ * Reset and clear the current config
+ *
+ * @api public
+ */
+parser.reset = function reset() {
+  parser.config = config = {};
 };
 
 /**
@@ -212,22 +273,18 @@ names.forEach(function prepareFunctions(section) {
     result.__proto__[functionalize(key)] = set.bind(set, section, key);
   });
 
-  module.exports[section] = result;
+  parser[section] = result;
 });
-
-/**
- * Export module.
- */
-module.exports.config = config;
 
 /**
  * Expose additional modules while testing.
  */
 if (process.env.NODE_ENV === 'testing') {
-  module.exports.set = set;
-  module.exports.get = get;
-  module.exports.parse = parse;
-  module.exports.compose = compose;
-  module.exports.comment = comment;
-  module.exports.functionalize = functionalize;
+  parser.set = set;
+  parser.get = get;
+  parser.parse = parse;
+  parser.compose = compose;
+  parser.comment = comment;
+  parser.functionalize = functionalize;
+  parser.findKey = findKey;
 }

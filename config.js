@@ -2,6 +2,7 @@
  * Config sections and bitmasks.
  *
  * @type {Object}
+ * @api public
  */
 module.exports.sections = {
     global: 1 << 1    // 2
@@ -14,6 +15,9 @@ module.exports.sections = {
 /**
  * Configuration keys and bitwise value, each bitwise value appoints
  * sections to which the key belongs.
+ *
+ * @type {Object}
+ * @api public
  */
 module.exports.keys = {
     2: [

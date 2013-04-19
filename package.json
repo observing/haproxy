@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "dsv": "0.0.x",
+    "lodash": "1.2.x",
     "which": "~1.0.5"
   },
   "devDependencies": {
