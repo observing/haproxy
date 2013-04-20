@@ -7,11 +7,6 @@ var fs = require('fs')
   , path = require('path');
 
 /**
- * Third-party modules
- */
-var _ = require('lodash');
-
-/**
  * Required defaults.
  */
 var defaults = require('./config')
@@ -101,12 +96,12 @@ var parse = {
         if (!line.length) return;
 
         // Keep track of the section.
-        section = _.find(names, findKey.bind(_, line));
+        section = names.filter(findKey.bind(this, line))[0];
         if (section) return current = section;
 
         // Check content against known keys in current section.
-        key = _.find(keys[current], findKey.bind(_, line));
-        if (!key) return;
+        key = keys[current].filter(findKey.bind(this, line))[0];
+        if (!key.length) return;
 
         // Store the value if we got a key match, and add the comment (if present).
         hash = line.split('#');
