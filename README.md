@@ -165,3 +165,79 @@ haproxy.weight('backend', 'server1', function (err, weight) {
   console.log(weight);
 });
 ```
+
+### HAProxy.setWeight(backend, server, weight, fn)
+
+Set a new weight for a server.
+
+```js
+haproxy.setWeight('backend', 'server1', '10', function (err) {
+// woop
+});
+```
+
+### HAProxy.maxconn(frontend, max, fn)
+
+Update the maxconnection setting for the frontend.
+
+```js
+haproxy.maconn('public', 809809, function (err) {
+  // handle failures.
+});
+```
+
+### HAProxy.connections(24242, fn)
+
+Change the process-wide rate limit. Setting this value to 0 will disable the
+rate-limitter.
+
+```js
+haproxy.connections(4242, function (err) {
+  // handle errors ._.
+});
+```
+
+### HAProxy.compression(2, fn)
+
+Change the maximum input compression rate.
+
+```js
+haproxy.compression(3, function (err) {
+  // oh noes. error handling, but this is optional, if you don't care about
+  // errors
+});
+```
+
+### HAProxy.info(fn)
+
+Retrieve some information about the HAProxy
+
+```js
+haproxy.info(function (err, info) {
+  // do something with the info..
+});
+```
+
+### HAProxy.session([id], fn)
+
+Dump all know session if no session id is provided.
+
+```js
+haproxy.session(function (err, sess) {
+  // wooop
+});
+```
+
+### HAProxy.stats(id, type, id, fn)
+
+Dump all statistics, if you want everything, supply -1 for all values.
+
+```js
+haproxy.stats('-1', '-1', '-1', function () {
+
+});
+```
+
+### License
+
+MIT
