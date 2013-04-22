@@ -1,3 +1,9 @@
+```
+Here be deamons, this module is still under heavy development not all parsers
+are hooked up on the API's yet. Feel free to contribute and build the best
+HAProxy orchestration module out there.
+```
+
 # haproxy
 
 HAProxy is an amazing proxy, it has support for many different algorithms for
@@ -7,11 +13,11 @@ a pain. That's where `haproxy` comes in, it provides a access to the stat socket
 of HAProxy which allows you to enable, disable servers and front-ends, read out
 stats and much more. In addition to that it's also capable of hot reloading
 configuration changes and starting, stopping your HAProxy, even when it's
-running as a deamon.
+running as a daemon.
 
 ## Installation
 
-The package is released in `npm`, the Node.js package registery:
+The package is released in `npm`, the Node.js package registry:
 
 ```
 npm install haproxy --save
@@ -58,7 +64,7 @@ are supported:
 - `config`: The location of the configuration file
 - `discover`: Tries to find your HAProxy instance if you don't know the pid
 - `socket`: The location of the unix socket
-- [optional] `which`: The location of the haproxy
+- [optional] `which`: The location of the HAProxy
 
 There's a lot of freedom in this module, callbacks are always optional so you
 can do fire and forget management as well as how you add the callbacks.
@@ -103,8 +109,8 @@ haproxy.clear(function (err) {
 
 ### HAProxy.disable(backend, server, fn)
 
-Mark the given server a down for maintance, in this mode no checks will be
-preformned on the server until it leaves maintance.
+Mark the given server a down for maintenance, in this mode no checks will be
+preformed on the server until it leaves maintenance.
 
 ```js
 haproxy.disable('realtime', 'server1', function (err) {
@@ -114,7 +120,7 @@ haproxy.disable('realtime', 'server1', function (err) {
 
 ### HAProxy.enable(backend, server, fn)
 
-If the server was previously marked as down for maintance, it will mark the
+If the server was previously marked as down for maintenance, it will mark the
 server as up again and all checks will be re-enabled.
 
 ```js
