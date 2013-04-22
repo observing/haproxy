@@ -60,6 +60,33 @@ are supported:
 - `socket`: The location of the unix socket
 - [optional] `which`: The location of the haproxy
 
+There's a lot of freedom in this module, callbacks are always optional so you
+can do fire and forget management as well as how you add the callbacks.
+
+```js
+haproxy.method('value', function () { .. });
+
+//
+// Is the same as
+//
+
+haproxy.method('value').call(function () { .. });
+```
+
+It also supports a chaining API:
+
+```js
+haproxy.method().and.method2('value').and.method3('value', function () {
+  // woop woop
+});
+
+//
+// The example above will call method() and method() as fire and forget and
+// method3() is called with a callback. It doesn't maintain order so it could be
+// that method() is called after method3() as it could take longer to complete.
+//
+```
+
 The following methods are available:
 
 ### HAProxy.clear(all, fn)
@@ -70,6 +97,71 @@ has the same effect as restarting.
 
 ```js
 haproxy.clear(function (err) {
-  // 
+  // stats cleared
 })
+```
+
+### HAProxy.disable(backend, server, fn)
+
+Mark the given server a down for maintance, in this mode no checks will be
+preformned on the server until it leaves maintance.
+
+```js
+haproxy.disable('realtime', 'server1', function (err) {
+  // server out of the pool
+});
+```
+
+### HAProxy.enable(backend, server, fn)
+
+If the server was previously marked as down for maintance, it will mark the
+server as up again and all checks will be re-enabled.
+
+```js
+haproxy.enable('realtime', 'server1', function (err) {
+  // server enabled again
+});
+```
+
+### HAProxy.pause(frontend, fn)
+
+Mark the frontend as temporarily stopped. This corresponds to the mode which is
+used during a softrestart. The frontend releases the port it was bound on but it
+can be enabled again when needed.
+
+```js
+haproxy.pause('frontend', function (err) {
+  // disable the frontend
+});
+```
+
+### HAProxy.resume(frontend, fn)
+
+Resume the front-end that you previously paused.
+
+```js
+haproxy.resume('frontend', function (err) {
+  // enable the frontend
+});
+```
+
+### HAProxy.errors([id], fn)
+
+Show the server errors or the errors for the given session id. The session id is
+optional.
+
+```js
+haproxy.errors(function (err, errors) {
+  console.log(errors);
+});
+```
+
+### HAProxy.weight(backend, server, fn)
+
+Get the assigned weight for the server from the given backend.
+
+```js
+haproxy.weight('backend', 'server1', function (err, weight) {
+  console.log(weight);
+});
 ```

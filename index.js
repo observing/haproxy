@@ -315,7 +315,7 @@ HAProxy.prototype.weight = function weight(backend, server, fn) {
  * @param {Function} fn Callback.
  * @api public
  */
-HAProxy.prototype.weighting = function weights(backend, server, weight, fn) {
+HAProxy.prototype.setWeight = function weights(backend, server, weight, fn) {
   return this.send('set weight %s/%s %s', backend, server, weight).call(fn);
 };
 
