@@ -89,7 +89,7 @@ HAProxy.prototype.send = function send(command) {
   }).on('data', function data(chunk) {
     buffer += chunk;
   }).once('error', function error(err) {
-    fn(err);
+    fn.call(self, err);
 
     //
     // We've received an error on the socket, bailout, close the connection and
@@ -165,7 +165,7 @@ HAProxy.prototype.parse = function parse(using, buffer, fn) {
   //
   // Received an emptry response from the socket
   //
-  if (!buffer) return fn(undefined, true);
+  if (!buffer) return fn.call(this, undefined, true);
 
   if ('csv' === using ) {
     //
@@ -204,7 +204,7 @@ HAProxy.prototype.parse = function parse(using, buffer, fn) {
     buffer = result;
   }
 
-  fn(err, result || buffer);
+  fn.call(this, err, result || buffer);
 };
 
 /**
@@ -423,8 +423,46 @@ HAProxy.prototype.save = function save(path) {
 //
 ['start', 'stop', 'reload', 'verify', 'running'].forEach(function each(method) {
   HAProxy.prototype[method] = function proxy() {
-    this.orchestrator[method].apply(this.orchestrator, arguments);
-    return this;
+    var args = Array.prototype.slice.call(arguments, 0)
+      , self = this
+      , fn = noop;
+
+    //
+    // Extract the callback as we want to inject it with our own and provi
+    //
+    if ('function' === typeof args[args.length - 1]) {
+      fn = args.pop();
+    }
+
+    this.orchestrator[method].apply(this.orchestrator, args.concat(function () {
+      fn.apply(self, arguments);
+    }));
+
+    return {
+      /**
+       * Set the callback function for the command. By doing this later we can
+       * have fire & forget functionality. Or just a better API;
+       *
+       * @param {Function} callback The callback for the command.
+       * @returns {Object} The callback sugar.
+       * @api public
+       */
+      call: function call(callback) {
+        if ('function' === typeof callback) fn = callback;
+        return this;
+      },
+
+      /**
+       * Chain support:
+       *
+       *   haproxy.clear().and.disable(backend, server).and.pause(backend, server);
+       *
+       * It just returns a reference to the `haproxy` instance.
+       *
+       * @type {HAProxy}
+       */
+      and: self
+    };
   };
 });
 
