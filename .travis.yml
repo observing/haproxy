@@ -15,6 +15,7 @@ before_script:
   - make TARGET=linux26 USE_OPENSSL=1
   - sudo make install
   - cd ..
+  - sudo chmod 0777 /var/run
 
 notifications:
   irc: "irc.freenode.org#observing"
