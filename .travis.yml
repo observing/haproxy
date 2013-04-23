@@ -14,6 +14,7 @@ before_script:
   - cd haproxy-1.5-dev18
   - make TARGET=linux26 USE_OPENSSL=1
   - sudo make install
+  - cd ..
 
 notifications:
   irc: "irc.freenode.org#observing"
