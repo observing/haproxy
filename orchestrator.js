@@ -29,7 +29,7 @@ function Orchestrator(options) {
   options = options || {};
 
   this.which = options.which || require('which').sync('haproxy');
-  this.pid = options.pid || null;
+  this.pid = options.pid || '';
   this.pidFile = options.pidFile || '';
   this.config = options.config;
   this.discover = options.discover || false;
@@ -142,22 +142,22 @@ Orchestrator.prototype.stop = function stop(all, fn) {
 
   fn = fn.bind(this);
 
-  if (this.pid && !all) return this.run('kill %s', this.pid, function ran(err, output) {
+  if (this.pid && !all) return this.run('kill %s', this.pid, function ran(err, output, cmd) {
     if (err) return this.run('kill -9 %s', this.pid, function again(err, output, cmd) {
       if (err) return fn(err, undef, cmd);
 
-      this.pid = null;
+      this.pid = '';
       fn(undef, !output, cmd);
     });
 
-    this.pid = null;
+    this.pid = '';
     fn(undef, !output, cmd);
   });
 
   return this.run('killall haproxy', function ran(err, output, cmd) {
     if (err) return fn(err, undef, cmd);
 
-    this.pid = null;
+    this.pid = '';
     fn(undef, !output, cmd);
   });
 };
@@ -223,6 +223,7 @@ Orchestrator.prototype.running = function running(fn) {
 
   // We don't have a pid, fetch it and re-retry
   if (!this.pid) return this.read(function read(err, pid) {
+
     if (err) return fn(undef, false);
     if (this.pid) return this.running(fn);
 
@@ -247,9 +248,9 @@ Orchestrator.prototype.read = function read(fn) {
 
   if (this.pidFile) {
     fs.readFile(this.pidFile, 'utf-8', function reader(err, pid, cmd) {
-      this.pid = pid || null;
+      this.pid = (pid || '').trim();
 
-      if (fn) fn(err, pid, cmd);
+      if (fn) fn(err, this.pid, cmd);
     }.bind(this));
     return this;
   }
@@ -261,7 +262,7 @@ Orchestrator.prototype.read = function read(fn) {
   return this.run('pgrep haproxy', function find(err, processes, cmd) {
     if (err) return fn && fn(err, undef, cmd);
 
-    this.pid = processes.split('\n')[0] || null;
+    this.pid = (processes.split('\n')[0] || '').trim();
     if (fn) fn(undef, this.pid, cmd);
   });
 };
