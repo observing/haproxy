@@ -24,6 +24,8 @@ var run = require('child_process').exec
  * @api public
  */
 function Orchestrator(options) {
+  if (!(this instanceof Orchestrator)) return new Orchestrator(options);
+
   options = options || {};
 
   this.which = options.which || require('which').sync('haproxy');
@@ -221,7 +223,7 @@ Orchestrator.prototype.running = function running(fn) {
 
   // We don't have a pid, fetch it and re-retry
   if (!this.pid) return this.read(function read(err, pid) {
-    if (err) return fn(err);
+    if (err) return fn(undef, false);
     if (this.pid) return this.running(fn);
 
     // We don't have a pid or we were unable to find it which is probably an
@@ -253,23 +255,13 @@ Orchestrator.prototype.read = function read(fn) {
   }
 
   //
-  // We don't have a pid file, so maybe we have a process running.
+  // Check if we have a process running if we don't have a pidFile. The command
+  // will return an error when nothing exists.
   //
-  return this.run('ps x -o args=,pid | grep haproxy', function find(err, processes, cmd) {
+  return this.run('pgrep haproxy', function find(err, processes, cmd) {
     if (err) return fn && fn(err, undef, cmd);
 
-    //
-    // Parse the process list, we get it returned with <pid> <process>.
-    //
-    processes = processes.split('\n').filter(function filter(process) {
-      return !(~process.indexOf('grep haproxy') || !process);
-    }).map(function map(process) {
-      // @TODO try to parse the arguments out of the process if we don't have
-      // a `pidFile` specified.
-      return process.split(' ').pop();
-    });
-
-    this.pid = processes[0];
+    this.pid = processes.split('\n')[0] || null;
     if (fn) fn(undef, this.pid, cmd);
   });
 };

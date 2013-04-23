@@ -33,6 +33,8 @@ function noop() {}
  * @api public
  */
 function HAProxy(socket, options) {
+  if (!(this instanceof HAProxy)) return new HAProxy(socket, options);
+
   options = options || {};
 
   //
