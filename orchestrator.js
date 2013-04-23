@@ -2,6 +2,8 @@
 
 var run = require('child_process').exec
   , format = require('util').format
+  , mkdirp = require('mkdirp')
+  , path = require('path')
   , fs = require('fs')
   , undef;
 
@@ -26,7 +28,7 @@ function Orchestrator(options) {
 
   this.which = options.which || require('which').sync('haproxy');
   this.pid = options.pid || null;
-  this.pidFile = options.pidFile;
+  this.pidFile = options.pidFile || '';
   this.config = options.config;
   this.discover = options.discover || false;
 
@@ -95,6 +97,15 @@ Orchestrator.prototype.start = function start(fn) {
   // will default to a common location for pid files.
   //
   if (!this.pidFile) this.pidFile = '/var/run/haproxy.pid';
+
+  //
+  // Ensure that our pidFile actually existst.
+  //
+  var pidDir = path.dirname(this.pidFile);
+  if (!fs.existsSync(pidDir)) try {
+    mkdirp.sync(pidDir);
+  } catch (e) { return fn.call(this, e); }
+
   return this.verify(function verified(err) {
     if (err) return fn(err);
 
@@ -232,7 +243,7 @@ Orchestrator.prototype.running = function running(fn) {
 Orchestrator.prototype.read = function read(fn) {
   if (fn) fn = fn.bind(this);
 
-  if (!this.pidFile) {
+  if (this.pidFile) {
     fs.readFile(this.pidFile, 'utf-8', function reader(err, pid) {
       this.pid = pid || null;
 
