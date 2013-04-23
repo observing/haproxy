@@ -42,7 +42,18 @@ describe('haproxy:orchestrator', function () {
       });
     });
 
-    it('should run the application demonized');
+    it('should run the application demonized', function (done) {
+      var haproxy = new HAProxy(sock, {
+        config: orchestrator
+      });
+
+      haproxy.start(function (err, res, cmd) {
+        expect(cmd).to.include('haproxy');
+        expect(cmd).to.include('-D');
+        
+        done(err);
+      });
+    });
 
     it('should store the new pid', function (done) {
       var haproxy = new HAProxy(sock, {

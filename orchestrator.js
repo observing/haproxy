@@ -104,23 +104,23 @@ Orchestrator.prototype.start = function start(fn) {
   var pidDir = path.dirname(this.pidFile);
   if (!fs.existsSync(pidDir)) try {
     mkdirp.sync(pidDir);
-  } catch (e) { return fn.call(this, e); }
+  } catch (e) { return fn(e); }
 
   return this.verify(function verified(err) {
     if (err) return fn(err);
 
-    this.run('haproxy -D -f %s -p %s', this.config, this.pidFile, function ran(err) {
+    this.run('haproxy -D -f %s -p %s', this.config, this.pidFile, function ran(err, res, cmd) {
       //
       // It could be that it outputs some warnings
       //
-      if (err && !err.stderr) return fn(err);
+      if (err && !err.stderr) return fn(err, undef, cmd);
       var warnings = err && err.stderr ? err.stderr : undef;
 
       this.read(function reader() {
         //
         // We don't really care if we got errors or not.
         //
-        fn(undef, warnings);
+        fn(undef, warnings, cmd);
       });
     });
   });
@@ -141,22 +141,22 @@ Orchestrator.prototype.stop = function stop(all, fn) {
   fn = fn.bind(this);
 
   if (this.pid && !all) return this.run('kill %s', this.pid, function ran(err, output) {
-    if (err) return this.run('kill -9 %s', this.pid, function again(err, output) {
-      if (err) return fn(err);
+    if (err) return this.run('kill -9 %s', this.pid, function again(err, output, cmd) {
+      if (err) return fn(err, undef, cmd);
 
       this.pid = null;
-      fn(undef, !output);
+      fn(undef, !output, cmd);
     });
 
     this.pid = null;
-    fn(undef, !output);
+    fn(undef, !output, cmd);
   });
 
-  return this.run('killall haproxy', function ran(err, output) {
-    if (err) return fn(err);
+  return this.run('killall haproxy', function ran(err, output, cmd) {
+    if (err) return fn(err, undef, cmd);
 
     this.pid = null;
-    fn(undef, !output);
+    fn(undef, !output, cmd);
   });
 };
 
@@ -183,7 +183,7 @@ Orchestrator.prototype.reload = function reload(hard, fn) {
 
     var current = this.pid;
 
-    this.run(cmd, this.config, this.pidFile, current, function ran(err) {
+    this.run(cmd, this.config, this.pidFile, current, function ran(err, res, cmd) {
       if (err) return fn(err);
 
       //
@@ -191,7 +191,7 @@ Orchestrator.prototype.reload = function reload(hard, fn) {
       //
       (function piddy() {
         this.read(function read(err, pid) {
-          if (pid !== current) return fn(undef, true);
+          if (pid !== current) return fn(undef, true, cmd);
 
           setTimeout(piddy.bind(this), 100);
         });
@@ -229,8 +229,8 @@ Orchestrator.prototype.running = function running(fn) {
     fn(undef, false);
   });
 
-  return this.run('ps -p %s -o args=', this.pid, function ran(err) {
-    fn(undef, !err);
+  return this.run('ps -p %s -o args=', this.pid, function ran(err, res, cmd) {
+    fn(undef, !err, cmd);
   });
 };
 
@@ -244,10 +244,10 @@ Orchestrator.prototype.read = function read(fn) {
   if (fn) fn = fn.bind(this);
 
   if (this.pidFile) {
-    fs.readFile(this.pidFile, 'utf-8', function reader(err, pid) {
+    fs.readFile(this.pidFile, 'utf-8', function reader(err, pid, cmd) {
       this.pid = pid || null;
 
-      if (fn) fn(err, pid);
+      if (fn) fn(err, pid, cmd);
     }.bind(this));
     return this;
   }
@@ -256,7 +256,7 @@ Orchestrator.prototype.read = function read(fn) {
   // We don't have a pid file, so maybe we have a process running.
   //
   return this.run('ps x -o args=,pid | grep haproxy', function find(err, processes, cmd) {
-    if (err) return fn && fn(err);
+    if (err) return fn && fn(err, undef, cmd);
 
     //
     // Parse the process list, we get it returned with <pid> <process>.
@@ -270,7 +270,7 @@ Orchestrator.prototype.read = function read(fn) {
     });
 
     this.pid = processes[0];
-    if (fn) fn(undef, this.pid);
+    if (fn) fn(undef, this.pid, cmd);
   });
 };
 
