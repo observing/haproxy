@@ -4,6 +4,8 @@ are hooked up on the API's yet. Feel free to contribute and build the best
 HAProxy orchestration module out there.
 ```
 
+[![Build Status](https://travis-ci.org/observing/haproxy.png?branch=master)](https://travis-ci.org/observing/haproxy)
+
 # haproxy
 
 HAProxy is an amazing proxy, it has support for many different algorithms for
