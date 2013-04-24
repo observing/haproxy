@@ -1,7 +1,7 @@
 'use strict';
 
 var EventEmitter = require('events').EventEmitter
-  , Orchestrator = require('./orchestrator')
+  , Orchestrator = require('./lib/orchestrator')
   , format = require('util').format
   , net = require('net')
   , dsv = require('dsv')

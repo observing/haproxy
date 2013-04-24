@@ -19,7 +19,7 @@ var defaults = require('./config')
 //
 // Our process orchestrator which we need to verification
 //
-var Orchestrator = require('./orchestrator');
+var Orchestrator = require('./lib/orchestrator');
 
 //
 // Config storage.
