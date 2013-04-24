@@ -164,7 +164,7 @@ haproxy.errors(function (err, errors) {
 });
 ```
 
-### HAProxy.weight(backend, server, fn)
+### HAProxy.weight(backend, server, [weight], fn)
 
 Get the assigned weight for the server from the given backend.
 
@@ -174,17 +174,18 @@ haproxy.weight('backend', 'server1', function (err, weight) {
 });
 ```
 
-### HAProxy.setWeight(backend, server, weight, fn)
-
-Set a new weight for a server.
+If the `weight` argument is set, it will automatically set the weight for this
+server:
 
 ```js
-haproxy.setWeight('backend', 'server1', '10', function (err) {
+haproxy.weight('backend', 'server1', 10, function (err) {
 // woop
 });
 ```
 
-### HAProxy.maxconn(frontend, max, fn)
+Please note that the weight should be between 0 and 255
+
+### HAProxy.maxconn([frontend], max, fn)
 
 Update the maxconnection setting for the frontend.
 
@@ -194,7 +195,15 @@ haproxy.maconn('public', 809809, function (err) {
 });
 ```
 
-### HAProxy.connections(24242, fn)
+If no frontend is supplied it will apply this configuration globally
+
+```js
+haproxy.maconn(809809, function (err) {
+  // handle failures.
+});
+```
+
+### HAProxy.ratelimit(24242, fn)
 
 Change the process-wide rate limit. Setting this value to 0 will disable the
 rate-limitter.

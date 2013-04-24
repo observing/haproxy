@@ -16,6 +16,22 @@ describe('haproxy:orchestrator', function () {
 
   chai.Assertion.includeStack = true;
 
+  //
+  // Make sure that every process is dead before we start so we don't get random
+  // failures because we still have a haproxy running locally for testing
+  // purposes.
+  //
+  before(function (done) {
+    var haproxy = new HAProxy();
+
+    //
+    // Attempt to clean up all established HAProxies that are started
+    //
+    haproxy.stop(true, function () {
+      done();
+    });
+  });
+
   describe('#running', function () {
     it('should check if the current process is still running', function (done) {
       var haproxy = new HAProxy(sock, {

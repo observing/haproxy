@@ -12,6 +12,12 @@ var EventEmitter = require('events').EventEmitter
 //
 function noop() {}
 
+//
+// Store a reference to Array.prototype.slice as it's used for argument
+// conversion.
+//
+var slice = Array.prototype.slice;
+
 /**
  * Control your HAProxy servers using the unix domain socket. This module is
  * based upon the 1.5 branch socket.
@@ -255,17 +261,6 @@ HAProxy.prototype.enable = function enable(backend, server, fn) {
 };
 
 /**
- * Resume a frontend which was temporarily stopped.
- *
- * @param {String} frontend The frontend that needs to resume again.
- * @param {Function} fn Callback.
- * @api public
- */
-HAProxy.prototype.resume = function resume(frontend, fn) {
-  return this.send('enable frontend %s', frontend || '').call(fn);
-};
-
-/**
  * Mark the frontend as temporarilty stopped. This corresponds to the mode which
  * is used during a soft restart. THe frontend releases the port but it can be
  * enabled again if needed.
@@ -276,6 +271,17 @@ HAProxy.prototype.resume = function resume(frontend, fn) {
  */
 HAProxy.prototype.pause = function pause(frontend, fn) {
   return this.send('disable frontend %s', frontend).call(fn);
+};
+
+/**
+ * Resume a frontend which was temporarily stopped.
+ *
+ * @param {String} frontend The frontend that needs to resume again.
+ * @param {Function} fn Callback.
+ * @api public
+ */
+HAProxy.prototype.resume = function resume(frontend, fn) {
+  return this.send('enable frontend %s', frontend || '').call(fn);
 };
 
 /**
@@ -301,24 +307,25 @@ HAProxy.prototype.errors = function errors(id, fn) {
  *
  * @param {String} backend Name of the backend.
  * @param {String} server Address of the server.
- * @param {Function} fn Callback.
- * @api public
- */
-HAProxy.prototype.weight = function weight(backend, server, fn) {
-  return this.send('get weight %s/%s', backend, server).call(fn);
-};
-
-/**
- * @TODO integrate this with the function above.
- *
- * @param {String} backend Name of the backend.
- * @param {String} server Address of the server.
  * @param {String} weight Weight of the server
  * @param {Function} fn Callback.
  * @api public
  */
-HAProxy.prototype.setWeight = function weights(backend, server, weight, fn) {
-  return this.send('set weight %s/%s %s', backend, server, weight).call(fn);
+HAProxy.prototype.weight = function weights(backend, server, weight) {
+  var args = slice.call(arguments, 0)
+    , fn;
+
+  //
+  // Check if we have an optional callback function so it's easier to determin
+  // if we are setting or getting.
+  //
+  if ('function' === typeof args[args.length - 1]) fn = args.pop();
+
+  if (arguments.length === 3) {
+    return this.send('set weight %s/%s %d', backend, server, +weight).call(fn);
+  }
+
+  return this.send('get weight %s/%s', backend, server).call(fn);
 };
 
 /**
@@ -329,8 +336,21 @@ HAProxy.prototype.setWeight = function weights(backend, server, weight, fn) {
  * @param {Function} fn Callback.
  * @api public
  */
-HAProxy.prototype.maxconn = function maxconn(frontend, value, fn) {
-  return this.send('set maxconn frontend %s %d', frontend, value).call(fn);
+HAProxy.prototype.maxconn = function maxconn(frontend, value) {
+  var args = slice.call(arguments, 0)
+    , fn;
+
+  //
+  // Extract the callback function so we can determin if we are doing a global
+  // or front-end set
+  //
+  if ('function' === typeof args[args.length - 1]) fn = args.pop();
+
+  if (args.length === 2) {
+    return this.send('set maxconn frontend %s %d', frontend, +value).call(fn);
+  }
+
+  return this.send('set maxconn global %d', +value).call(fn);
 };
 
 /**
@@ -341,8 +361,8 @@ HAProxy.prototype.maxconn = function maxconn(frontend, value, fn) {
  * @param {Function} fn Callback
  * @api public
  */
-HAProxy.prototype.connections = function connections(value, fn) {
-  return this.send('set rate-limit connections global %d', value).call(fn);
+HAProxy.prototype.ratelimit = function connections(value, fn) {
+  return this.send('set rate-limit connections global %d', +value).call(fn);
 };
 
 /**
@@ -353,7 +373,7 @@ HAProxy.prototype.connections = function connections(value, fn) {
  * @api public
  */
 HAProxy.prototype.compression = function compression(value, fn) {
-  return this.send('set rate-limit http-compression global %d', value).call(fn);
+  return this.send('set rate-limit http-compression global %d', +value).call(fn);
 };
 
 /**
@@ -393,8 +413,22 @@ HAProxy.prototype.session = function session(id, fn) {
  * @param {Function} fn Callback
  * @api public
  */
-HAProxy.prototype.stat = function stat(id, type, sid, fn) {
-  return this.send('show stat %s %s %s', id || '-1', type || '-1', sid || '-1').using('csv').call(fn);
+HAProxy.prototype.stat = function stat() {
+  var args = slice.call(arguments, 0)
+    , id = -1
+    , type = -1
+    , sid = 1
+    , fn;
+
+  if ('function' === typeof args[args.length - 1]) fn = args.pop();
+
+  id = +args.shift();   // Assume that the first arg is the id
+  type = +args.shift(); // This would be the next arg
+  sid = +args.shift();  // And yet another args, omg it's amazing
+
+  return this.send('show stat %d %d %d', id || -1, type || -1, sid || -1)
+    .using('csv')
+    .call(fn);
 };
 
 /**
@@ -425,7 +459,7 @@ HAProxy.prototype.save = function save(path) {
 //
 ['start', 'stop', 'reload', 'verify', 'running'].forEach(function each(method) {
   HAProxy.prototype[method] = function proxy() {
-    var args = Array.prototype.slice.call(arguments, 0)
+    var args = slice.call(arguments, 0)
       , self = this
       , fn = noop;
 
@@ -457,7 +491,7 @@ HAProxy.prototype.save = function save(path) {
       /**
        * Chain support:
        *
-       *   haproxy.clear().and.disable(backend, server).and.pause(backend, server);
+       *   haproxy.start().and.stats().and.pause(backend, server);
        *
        * It just returns a reference to the `haproxy` instance.
        *
