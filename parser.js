@@ -1,30 +1,34 @@
 'use strict';
 
-/**
- * Native modules.
- */
-var fs = require('fs')
-  , path = require('path');
+//
+// Native modules.
+//
+var path = require('path')
+  , fs = require('fs');
 
-/**
- * Required defaults.
- */
+//
+// Required defaults.
+//
 var defaults = require('./config')
   , sections = defaults.sections
   , names = Object.keys(sections)
   , maps = defaults.keys
-  , parser = module.exports
   , keys = {}
   , config;
 
-/**
- * Config storage.
- */
-parser.config = config = {};
+//
+// Our process orchestrator which we need to verification
+//
+var Orchestrator = require('./orchestrator');
 
-/**
- * Composer functions.
- */
+//
+// Config storage.
+//
+exports.config = config = Object.create(null);
+
+//
+// Composer functions.
+//
 var compose = {
     /**
      * Composer function for JSON, strips comments and utilizes stringify.
@@ -89,9 +93,9 @@ var compose = {
     }
 };
 
-/**
- * Parse functions.
- */
+//
+// Parse functions.
+//
 var parse = {
     json: JSON.parse
 
@@ -124,7 +128,7 @@ var parse = {
 
         // Store the value if we got a key match, and add the comment (if present).
         hash = line.split('#');
-        parser[current](name).add(key, hash[0].substr(key.length).trim())(hash[1]);
+        exports[current](name).add(key, hash[0].substr(key.length).trim())(hash[1]);
       });
 
       return config;
@@ -252,25 +256,51 @@ function set(section, name, key, value) {
  * @param {Function} callback
  * @api public
  */
-parser.read = function read(location, callback) {
+exports.read = function read(location, callback) {
   var type = path.extname(location).substr(1);
+
   if (!(type in compose)) {
-    throw new Error('Supplied file with extension: '+ type +' cannot be parsed');
+    callback(new Error('Supplied file with extension: '+ type +' cannot be parsed'));
+    return exports;
   }
 
   // Read the file and pull content through the right parser.
   fs.readFile(location, 'utf-8', function parseFile(err, data) {
-    if (err) throw err;
+    if (err) return callback(err);
 
-    callback(null, parse[type].call(this, data));
+    callback(undefined, parse[type].call(this, data));
   });
+
+  return exports;
 };
 
 /**
  * Verify the current config by using HAProxies check.
+ *
+ * @param {Function} callback
+ * @api public
  */
-parser.verify = function verify() {
-  // Spawn child and use haproxy -c -f </tmp/config>
+exports.verify = function verify(callback) {
+  var tmp = '/tmp/haproxy.'+ Math.random().toString(36).substring(2).toUpperCase()
+    , orchestrator = new Orchestrator({ config: tmp })
+    , data = compose.cfg(config);
+
+  fs.writeFile(tmp, data, function hollaback(err) {
+    if (err) return callback(err);
+
+    orchestrator.verify(function verification() {
+      callback.apply(exports, arguments);
+
+      //
+      // We don't care if it fails or not, each file would have a unique name.
+      // And we don't really need to remove it from the file system but it's
+      // just `nice` do some additional cleanup
+      //
+      fs.unlink(tmp, function likeigiveafuck() {});
+    });
+  });
+
+  return exports;
 };
 
 /**
@@ -280,11 +310,12 @@ parser.verify = function verify() {
  * @param {Function} callback
  * @api public
  */
-parser.write = function write(location, callback) {
+exports.write = function write(location, callback) {
   var type = path.extname(location).substr(1);
   if (!(type in compose)) type = 'json';
 
-  fs.writeFile(location, compose[type].call(this, parser.config), callback);
+  fs.writeFile(location, compose[type].call(this, exports.config), callback);
+  return exports;
 };
 
 /**
@@ -292,13 +323,14 @@ parser.write = function write(location, callback) {
  *
  * @api public
  */
-parser.reset = function reset() {
-  parser.config = config = {};
+exports.reset = function reset() {
+  exports.config = config = Object.create(null);
+  return exports;
 };
 
-/**
- * Generate allowed config keys per section from the bitmasks.
- */
+//
+// Generate allowed config keys per section from the bitmasks.
+//
 names.forEach(function prepareKeys(section) {
   var mask = sections[section]
     , current;
@@ -309,11 +341,11 @@ names.forEach(function prepareKeys(section) {
   });
 });
 
-/**
- * Generate some helper methods on each section to quickly set and get values.
- */
+//
+// Generate some helper methods on each section to quickly set and get values.
+//
 names.forEach(function prepareFunctions(section) {
-  parser[section] = function setup(name) {
+  exports[section] = function setup(name) {
     // Defaults have no name parameter, but for eaz and consistency we
     // are gonna pretend it has a general name section.
     if (!name || section === 'defaults') name = 'general';
@@ -336,16 +368,16 @@ names.forEach(function prepareFunctions(section) {
   };
 });
 
-/**
- * Expose additional modules while testing.
- */
+//
+// Expose additional modules while testing.
+//
 if (process.env.NODE_ENV === 'testing') {
-  parser.set = set;
-  parser.get = get;
-  parser.add = add;
-  parser.parse = parse;
-  parser.compose = compose;
-  parser.comment = comment;
-  parser.functionalize = functionalize;
-  parser.findKey = findKey;
+  exports.set = set;
+  exports.get = get;
+  exports.add = add;
+  exports.parse = parse;
+  exports.compose = compose;
+  exports.comment = comment;
+  exports.functionalize = functionalize;
+  exports.findKey = findKey;
 }
