@@ -1,0 +1,58 @@
+{
+  "global": {
+    "general": {
+      "pidfile": "/var/run/haproxy.pid",
+      "log": "127.0.0.1 local0 info"
+    }
+  },
+  "defaults": {
+    "general": {
+      "mode": "http",
+      "timeout connect": "8000",
+      "commentary": {
+        "timeout connect": "maximum time to wait for a connection attempt to a server to succeed",
+        "balance": "each server is used in turns, according to assigned weight"
+      },
+      "timeout client": "8000",
+      "timeout server": "8000",
+      "stats enable": "",
+      "stats auth": "admin:password",
+      "stats uri": "/monitor",
+      "stats refresh": "5s",
+      "option httpchk": "GET /status",
+      "retries": "5",
+      "option redispatch": "",
+      "balance": "roundrobin"
+    }
+  },
+  "frontend": {
+    "http": {
+      "bind": ":80",
+      "monitor-uri": "/haproxy",
+      "commentary": {
+        "monitor-uri": "end point to monitor HAProxy status (returns 200)"
+      },
+      "acl": [
+        "api1 path_reg ^/api1/?",
+        "api2 path_reg ^/api2/?"
+      ],
+      "use_backend": [
+        "api1 if api1",
+        "api2 if api2"
+      ]
+    }
+  },
+  "backend": {
+    "api1": {
+      "server": [
+        "srv0 127.0.0.1:9000 weight 1 maxconn 100 check inter 4000",
+        "srv1 127.0.0.1:9001 weight 1 maxconn 100 check inter 4000",
+        "srv2 127.0.0.1:9002 weight 1 maxconn 100 check inter 4000"
+      ]
+    },
+    "api2": {
+      "option httpclose": "",
+      "server": "srv01 127.0.0.1:8000 weight 1 maxconn 50 check inter 4000"
+    }
+  }
+}

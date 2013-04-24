@@ -54,20 +54,36 @@ var compose = {
      */
   , cfg: function cfgComposer(data) {
       return Object.keys(data).reduce(function addSections(result, key) {
-        var current = data[key]
-          , comm = current.commentary;
+        var current = data[key];
 
-        // Output section and main comments.
-        if (comm && comm.pre) result += '# '+ comm.pre +'\n';
-        result += key +'\n';
+        return result + Object.keys(current).reduce(function addNames(named, name) {
+          var sub = current[name]
+            , comm = sub.commentary;
 
-        // Output section keys and values.
-        return result += Object.keys(current).reduce(function addKeys(section, key) {
-          if (key === 'commentary') return section;
+          // Output section and main comments.
+          if (comm && comm.pre) result += '# '+ comm.pre +'\n';
+          named += key + (name !== 'general' ? ' ' + name + '\n' : '\n');
 
-          // Add key and value and if required add comment.
-          return section += '    '+ key +' '+ current[key]
-            + (comm[key] ? ' # ' + comm[key] : '');
+          // Output section keys and values.
+          return named += Object.keys(sub).reduce(function addKeys(section, key) {
+            if (key === 'commentary') return section;
+
+            // Check if the key has multiple values stored as array, otherwise
+            // just add the key and value and comment (if required).
+            if (Object.prototype.toString.call(sub[key]) === '[object Array]') {
+              var length = sub[key].length;
+
+              for (var i = 0; i < length; i++) {
+                section += '    '+ key + (sub[key][i].length ? ' '+ sub[key][i] : '');
+                section += (i === 1 && comm && comm[key] ? ' # ' + comm[key] + '\n' : '\n');
+              }
+
+              return section;
+            } else {
+              return section += '    '+ key + (sub[key].length ? ' '+ sub[key] : '')
+                + (comm && comm[key] ? ' # ' + comm[key] + '\n' : '\n');
+            }
+          }, '') + '\n';
         }, '');
       }, '');
     }
@@ -87,7 +103,7 @@ var parse = {
      * @api private
      */
   , cfg: function cfgParser(data) {
-      var current, hash, section, key, add;
+      var current, hash, section, key, name;
 
       data.split(/\n/).forEach(function parse(line) {
         line = line.trim();
@@ -97,7 +113,10 @@ var parse = {
 
         // Keep track of the section.
         section = names.filter(findKey.bind(this, line))[0];
-        if (section) return current = section;
+        if (section) {
+          name = line.split(' ')[1]; // Named section support.
+          return current = section;
+        }
 
         // Check content against known keys in current section.
         key = keys[current].filter(findKey.bind(this, line))[0];
@@ -105,7 +124,7 @@ var parse = {
 
         // Store the value if we got a key match, and add the comment (if present).
         hash = line.split('#');
-        add = parser[current].add(key, hash[0].substr(key.length).trim())(hash[1]);
+        parser[current](name).add(key, hash[0].substr(key.length).trim())(hash[1]);
       });
 
       return config;
@@ -134,13 +153,17 @@ function findKey(line, key) {
  * @return {String} text
  * @api private
  */
-function comment(section, key, text) {
+function comment(section, name, key, text) {
+  var element, sub;
+
+  // Do add comments, will you!
   if (!text) return;
 
-  config[section] = config[section] || {};
-  config[section].commentary = config[section].commentary || {};
+  config[section] = element = config[section] || {};
+  element[name] = sub = element[name] || {};
+  sub.commentary = sub.commentary || {};
 
-  return config[section].commentary[key] = text.trim();
+  return sub.commentary[key] = text.trim();
 }
 
 /**
@@ -162,8 +185,8 @@ function functionalize(value) {
  * @return {String} key value
  * @api private
  */
-function get(section, key) {
-  return config[section][key];
+function get(section, name, key) {
+  return config[section][name][key];
 }
 
 /**
@@ -175,22 +198,25 @@ function get(section, key) {
  * @return {Object} bind comment to key.
  * @api private
  */
-function add(section, key, value) {
+function add(section, name, key, value) {
+  var element, sub;
+
   // Check if the current key is allowed to be set on the section.
   if (!~keys[section].indexOf(key)) return;
 
-  config[section] = config[section] || {};
+  config[section] = element = config[section] || {};
+  element[name] = sub = element[name] || {};
 
   // If this key is undefined just call set.
-  if (!config[section][key]) return parser.set(section, key, value);
+  if (!sub[key]) return set(section, name, key, value);
 
   // Convert to array so we can just push to it.
-  if (config[section][key] && typeof config[section][key] === 'string') {
-    config[section][key] = [config[section][key]];
+  if (sub[key] && typeof sub[key] === 'string') {
+    sub[key] = [sub[key]];
   }
 
   // Add the value
-  config[section][key].push(value);
+  sub[key].push(value);
 
   // Expose comment function bound to key.
   return comment.bind(comment, section, key);
@@ -205,15 +231,18 @@ function add(section, key, value) {
  * @return {Object} bind comment to key.
  * @api private
  */
-function set(section, key, value) {
+function set(section, name, key, value) {
+  var element, sub;
+
   // Check if the current key is allowed to be set on the section.
   if (!~keys[section].indexOf(key)) return;
 
-  config[section] = config[section] || {};
-  config[section][key] = value;
+  config[section] = element = config[section] || {};
+  element[name] = sub = element[name] || {};
+  sub[key] = value;
 
   // Expose comment function bound to key.
-  return comment.bind(comment, section, key);
+  return comment.bind(comment, section, name, key);
 }
 
 /**
@@ -255,7 +284,7 @@ parser.write = function write(location, callback) {
   var type = path.extname(location).substr(1);
   if (!(type in compose)) type = 'json';
 
-  fs.writeFile(location, compose[type].call(this, config), callback);
+  fs.writeFile(location, compose[type].call(this, parser.config), callback);
 };
 
 /**
@@ -284,22 +313,27 @@ names.forEach(function prepareKeys(section) {
  * Generate some helper methods on each section to quickly set and get values.
  */
 names.forEach(function prepareFunctions(section) {
-  var result = {};
+  parser[section] = function setup(name) {
+    // Defaults have no name parameter, but for eaz and consistency we
+    // are gonna pretend it has a general name section.
+    if (!name || section === 'defaults') name = 'general';
 
-  // Add getters and setters to each section.
-  result.__proto__ = {
-    get: get.bind(get, section),
-    set: set.bind(set, section),
-    add: add.bind(add, section),
-    comment: comment.bind(comment, section, 'pre')
+    // Add getters and setters to each section.
+    var result = {};
+    result.__proto__ = {
+      get: get.bind(get, section, name),
+      set: set.bind(set, section, name),
+      add: add.bind(add, section, name),
+      comment: comment.bind(comment, section, name, 'pre')
+    };
+
+    // Also add camelCased proxies for each key in the section.
+    keys[section].forEach(function addProxies(key) {
+      result.__proto__[functionalize(key)] = set.bind(set, section, name, key);
+    });
+
+    return result;
   };
-
-  // Also add camelCased proxies for each key in the section.
-  keys[section].forEach(function addProxies(key) {
-    result.__proto__[functionalize(key)] = set.bind(set, section, key);
-  });
-
-  parser[section] = result;
 });
 
 /**
