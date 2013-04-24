@@ -31,22 +31,15 @@ exports.config = config = Object.create(null);
 //
 var compose = {
     /**
-     * Composer function for JSON, strips comments and utilizes stringify.
+     * Composer function for readable JSON.
      *
      * @param {Object} data
      * @returns {String} stringified data.
      * @api private
      */
     json: function stringify(data) {
-      var clone = JSON.parse(JSON.stringify(data));
-
-      // Remove commentary as it has no place in JSON.
-      Object.keys(clone).forEach(function removeComments(key) {
-        delete clone[key].commentary;
-      });
-
       // Stringify and keep it readable.
-      return JSON.stringify(clone, null, 2);
+      return JSON.stringify(data, null, 2);
     }
 
     /**
