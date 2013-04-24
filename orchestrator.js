@@ -209,7 +209,11 @@ Orchestrator.prototype.reload = function reload(hard, fn) {
  * @api public
  */
 Orchestrator.prototype.verify = function verify(fn) {
-  return this.run('haproxy -c -f %s', this.config, fn.bind(this));
+  fn = fn.bind(this);
+
+  return this.run('haproxy -c -f %s', this.config, function verified(err, res, cmd) {
+    fn(undefined, !err && !!res, cmd);
+  });
 };
 
 /**

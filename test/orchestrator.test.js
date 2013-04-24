@@ -117,9 +117,110 @@ describe('haproxy:orchestrator', function () {
   });
 
   describe('#stop', function () {
-    it('should stop all the running processes');
+    it('should stop all the running processes', function (done) {
+      var haproxy = new HAProxy(sock, {
+        config: orchestrator
+      });
 
-    it('should stop the current running process');
+      var another = new HAProxy('/tmp/another.sock', {
+        config: fixtures +'/another.cfg',
+        pidFile: '/var/run/another.pid'
+      });
+
+      //
+      // start both servers, ensure they are both running, killall ensure that
+      // they are all not running.
+      //
+      function running(value, fn) {
+        haproxy.running(function (err, running) {
+          if (err) return done(err);
+
+          expect(running).to.equal(value);
+          another.running(function (err, running) {
+            if (err) return done(err);
+
+            expect(running).to.equal(value);
+            fn();
+          });
+        });
+      }
+
+      function stop(fn) {
+        haproxy.stop(true, function (err) {
+          if (err) return done(err);
+
+          running(false, fn);
+        });
+      }
+
+      haproxy.start(function (err) {
+        if (err) return done(err);
+
+        another.start(function (err) {
+          if (err) return done(err);
+
+          running(true, stop.bind(undefined, done));
+        });
+      });
+    });
+
+    it('should only stop the current running process', function (done) {
+      var haproxy = new HAProxy(sock, {
+        config: orchestrator
+      });
+
+      var another = new HAProxy('/tmp/another.sock', {
+        config: fixtures +'/another.cfg',
+        pidFile: '/var/run/another.pid'
+      });
+
+      //
+      // start both servers, ensure they are both running, killall ensure that
+      // they are all not running.
+      //
+      function running(value, fn) {
+        haproxy.running(function (err, running) {
+          if (err) return done(err);
+
+          expect(running).to.equal(value);
+          another.running(function (err, running) {
+            if (err) return done(err);
+
+            expect(running).to.equal(value);
+            fn();
+          });
+        });
+      }
+
+      function stop(fn) {
+        haproxy.stop(function (err) {
+          if (err) return done(err);
+
+          haproxy.running(function (err, running) {
+            if (err) return done(err);
+
+            expect(running).to.equal(false);
+
+            another.running(function (err, running) {
+              if (err) return done(err);
+
+              expect(running).to.equal(true);
+              another.stop(fn);
+            });
+          });
+        });
+      }
+
+      haproxy.start(function (err) {
+        if (err) return done(err);
+
+        another.start(function (err) {
+          if (err) return done(err);
+
+          running(true, stop.bind(undefined, done));
+        });
+      });
+    });
   });
 
   describe('#reload', function () {
@@ -131,7 +232,27 @@ describe('haproxy:orchestrator', function () {
   });
 
   describe('#verify', function () {
-    it('should verify the correctness of the configuration');
+    it('should verify the correctness of the configuration', function (done) {
+      var broken = new HAProxy(sock, {
+        config: orchestrator
+      });
+
+      broken.verify(function (err, okay) {
+        expect(okay).to.equal(true);
+        done(err);
+      });
+    });
+
+    it('should verify the broken configuration', function (done) {
+      var broken = new HAProxy(sock, {
+        config: fixtures +'/broken.cfg'
+      });
+
+      broken.verify(function (err, okay) {
+        expect(okay).to.equal(false);
+        done(err);
+      });
+    });
   });
 
   afterEach(function (done) {
