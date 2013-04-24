@@ -1,7 +1,7 @@
 {
   "global": {
     "general": {
-      "pidfile": "/var/run/haproxy.pid",
+      "pidfile": "/tmp/haproxy.pid",
       "log": "127.0.0.1 local0 info"
     }
   },

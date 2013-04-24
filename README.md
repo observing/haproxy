@@ -25,6 +25,22 @@ The package is released in `npm`, the Node.js package registry:
 npm install haproxy --save
 ```
 
+## Testing
+
+Tests can be executed after installation by running `npm test`. For test to run
+properly *Haproxy 1.5dev18* or greater is required. See commands below:
+
+```
+sudo apt-get install -qq build-essential libssl-dev libev-dev
+wget http://haproxy.1wt.eu/download/1.5/src/devel/haproxy-1.5-dev18.tar.gz
+tar xzvf haproxy-1.5-dev18.tar.gz
+cd haproxy-1.5-dev18
+make TARGET=linux26 USE_OPENSSL=1
+sudo make install
+
+npm test
+```
+
 ## haproxy.cfg
 
 In order to make your HAProxy installation work with this module you need to
