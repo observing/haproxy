@@ -1,10 +1,12 @@
+'use strict';
+
 /**
  * Config sections and bitmasks.
  *
  * @type {Object}
  * @api public
  */
-module.exports.sections = {
+exports.sections = {
     global: 1 << 1    // 2
   , defaults: 1 << 2  // 4
   , frontend: 1 << 3  // 8
@@ -19,7 +21,7 @@ module.exports.sections = {
  * @type {Object}
  * @api public
  */
-module.exports.keys = {
+exports.keys = {
     2: [
         'ca-base', 'chroot', 'crt-base', 'daemon', 'debug', 'gid', 'group'
       , 'log-send-hostname', 'maxcompcpuusage', 'maxcomprate', 'maxconnrate'
