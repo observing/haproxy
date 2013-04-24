@@ -1,3 +1,17 @@
+#
+# Ignore garbage created by node and npm
+#
 node_modules
 *.log
+
+#
+# This pid is generated for the tests
+#
 test/haproxy.pid
+
+#
+# ignore sublime project configuration for those who follow the
+# convention of naming the projects with the github names.
+# 
+haproxy.sublime-project
+haproxy.sublime-workspace
