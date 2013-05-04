@@ -1,6 +1,7 @@
 'use strict';
 
 var EventEmitter = require('events').EventEmitter
+  , Configuration = require('./lib/configuration')
   , Orchestrator = require('./lib/orchestrator')
   , format = require('util').format
   , net = require('net')
@@ -52,7 +53,7 @@ function HAProxy(socket, options) {
   }
 
   this.socket = socket || '/tmp/haproxy.sock';                // Path to socket
-  this.config = options.config || '/etc/haproxy/haproxy.cfg'; // Config location
+  this.cfg = options.config || '/etc/haproxy/haproxy.cfg'; // Config location
 
   //
   // Create a new `haproxy` orchestrator which interacts with the binary.
@@ -62,8 +63,10 @@ function HAProxy(socket, options) {
     pid: options.pid,
     pidFile: options.pidFile,
     discover: options.discover,
-    config: this.config
+    config: this.cfg
   });
+
+  this.config = new Configuration();
 }
 
 HAProxy.prototype.__proto__ = EventEmitter.prototype;
@@ -435,22 +438,24 @@ HAProxy.prototype.stat = function stat() {
  * Read the HAProxy configuration file.
  *
  * @param {String} path The location of the config file.
+ * @param {Function} fn Optional callback if it needs to be async
  * @api public
  */
-HAProxy.prototype.load = function load(path) {
-  var cfg = fs.readFileSync(path || this.config, 'utf-8');
+HAProxy.prototype.load = function load(path, fn) {
+  this.config.read(path || this.cfg, fn);
+  return this;
 };
 
 /**
  * Save the HAProxy configuration file again.
  *
  * @param {String} path The location of the config file.
+ * @param {Function} fn Optional callback if it needs to be async
  * @api public
  */
-HAProxy.prototype.save = function save(path) {
-  var cfg = '';
-
-  fs.writeFileSync(path || this.config, 'utf-8');
+HAProxy.prototype.save = function save(path, fn) {
+  this.config.write(path || this.cfg, fn);
+  return this;
 };
 
 //

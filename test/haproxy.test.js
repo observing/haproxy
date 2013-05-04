@@ -33,7 +33,7 @@ describe('haproxy', function () {
     var proxy = new HAProxy({ socket: '/tmp/fixture.sock', config: '/foo' });
 
     expect(proxy.socket).to.equal('/tmp/fixture.sock');
-    expect(proxy.config).to.equal('/foo');
+    expect(proxy.cfg).to.equal('/foo');
   });
 
   it('accepts a socket first argument', function () {
