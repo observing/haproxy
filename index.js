@@ -478,6 +478,8 @@ HAProxy.prototype.save = HAProxy.prototype.write = function save(path, fn) {
 // documentation please see the orchestrator.js
 //
 ['start', 'stop', 'reload', 'verify', 'running'].forEach(function each(method) {
+  if (method in HAProxy.prototype) throw new Error('HAProxy#'+ method +' is duplicate');
+
   HAProxy.prototype[method] = function proxy() {
     var args = slice.call(arguments, 0)
       , self = this

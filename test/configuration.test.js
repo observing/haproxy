@@ -77,11 +77,6 @@ describe('parser', function () {
     expect(parser.listen().get('description')).to.equal(value);
   });
 
-  it('parse#json reads JSON config from file');
-  it('parse#cfg reads cfg config from file');
-  it('compose#json creates readable JSON from config');
-  it('compose#cfg creates cfg from config');
-
   describe('#set', function () {
     var value = 'something random';
 
@@ -160,14 +155,26 @@ describe('parser', function () {
       parser.write('/tmp/test.cfg', function (err) {
         fs.readFile(__dirname + '/fixtures/default.cfg', 'utf-8', function (err, origin) {
           fs.readFile('/tmp/test.cfg', 'utf-8', function (err, data) {
-            expect(origin).to.equal(data.replace(/\n$/, ''));
+            expect(origin.trim()).to.equal(data.trim());
             done();
           });
         });
       });
     });
 
-    it('format is specified by file extension');
+    it('format is specified by file extension', function (done) {
+      var data = require(__dirname + '/fixtures/default');
+
+      parser.data = data;
+      parser.write('/tmp/test.json', function (err) {
+        fs.readFile(__dirname + '/fixtures/default.json', 'utf-8', function (err, origin) {
+          fs.readFile('/tmp/test.json', 'utf-8', function (err, data) {
+            expect(origin.trim()).to.equal(data.trim());
+            done();
+          });
+        });
+      });
+    });
   });
 
   describe('#read', function () {
@@ -175,13 +182,21 @@ describe('parser', function () {
       parser.read(__dirname + '/fixtures/default.cfg', function () {
         fs.readFile(__dirname + '/fixtures/default.json', 'utf-8', function (err, data) {
           // Newline needs to be stripped to get a perfect match.
-          expect(JSON.stringify(parser.data, null, 2)).to.equal(data.replace(/\n$/, ''));
+          expect(JSON.stringify(parser.data, null, 2)).to.equal(data.trim());
           done();
         });
       });
     });
 
-    it('reads json config to usable object');
+    it('reads json config to usable object', function (done) {
+      parser.read(__dirname + '/fixtures/default.json', function () {
+        fs.readFile(__dirname + '/fixtures/default.json', 'utf-8', function (err, data) {
+          // Newline needs to be stripped to get a perfect match.
+          expect(JSON.stringify(parser.data, null, 2)).to.equal(data.trim());
+          done();
+        });
+      });
+    });
   });
 
   describe('#has', function () {
@@ -196,9 +211,12 @@ describe('parser', function () {
   describe('#reset', function () {
     it('clears the config', function () {
       parser.data = { test: 'some random key set' };
+      parser.source = 'fooo';
 
       parser.reset();
+
       expect(Object.keys(parser.data).length).to.equal(0);
+      expect(parser.source).to.equal('');
     });
   });
 });
