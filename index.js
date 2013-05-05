@@ -65,11 +65,26 @@ function HAProxy(socket, options) {
     discover: options.discover,
     config: this.cfg
   });
-
-  this.config = new Configuration();
 }
 
 HAProxy.prototype.__proto__ = EventEmitter.prototype;
+
+/**
+ * Lazy initialize the configuration.
+ *
+ * @api private
+ */
+Object.defineProperty(HAProxy.prototype, 'config', {
+  get: function get() {
+    this.config = new Configuration();
+    this.read();
+    return this.config;
+  },
+  set: function set(value) {
+    Object.defineProperty(this, 'config', { value: value, writable: true });
+    return value;
+  }
+});
 
 /**
  * Send a command to the HAProxy socket.
@@ -441,7 +456,7 @@ HAProxy.prototype.stat = function stat() {
  * @param {Function} fn Optional callback if it needs to be async
  * @api public
  */
-HAProxy.prototype.load = function load(path, fn) {
+HAProxy.prototype.load = HAProxy.prototype.read = function load(path, fn) {
   this.config.read(path || this.cfg, fn);
   return this;
 };
@@ -453,7 +468,7 @@ HAProxy.prototype.load = function load(path, fn) {
  * @param {Function} fn Optional callback if it needs to be async
  * @api public
  */
-HAProxy.prototype.save = function save(path, fn) {
+HAProxy.prototype.save = HAProxy.prototype.write = function save(path, fn) {
   this.config.write(path || this.cfg, fn);
   return this;
 };
