@@ -159,11 +159,26 @@ describe('haproxy', function () {
   });
 
   describe('#weight', function () {
-    it('returns the inital and current weight');
+    it('returns the inital and current weight', function (done) {
+      var proxy = new HAProxy({ socket: '/tmp/fixture.sock' });
+
+      proxy.weight('foo', 'bar', function (err, data) {
+        expect(err).to.not.be.instanceOf(Error);
+
+        expect(data.initial).to.equal(1);
+        expect(data.current).to.equal(5);
+
+        done();
+      });
+    });
+
     it('returns an error when the given backend does not exist');
+
     it('returns an error when the given server does not exist');
+
     it('should set the weight when a weight argument is supplied');
-    it('shoudl return an error when the set weight is to high');
+
+    it('should return an error when the set weight is to high');
   });
 
   describe('#maxconn', function () {

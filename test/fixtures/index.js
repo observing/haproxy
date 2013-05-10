@@ -33,5 +33,6 @@ module.exports = {
 
   'enable server realtime/node1': read('empty'),
   'enable server realtime/node2': read('noserver'),
-  'enable server realtimer/node1': read('nobackend')
+  'enable server realtimer/node1': read('nobackend'),
+  'get weight foo/bar': read('weight-initial')
 };

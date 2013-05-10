@@ -224,7 +224,7 @@ HAProxy.prototype.parse = function parse(using, buffer, fn) {
     }, {});
   } else if (~buffer.indexOf('initial')) {
     var data = /(\d*)\s\(initial\s(\d*)\)/.exec(buffer);
-    result = { current: data[1], initial: data[2] };
+    result = { current: +data[1], initial: +data[2] };
   } else {
     err = new Error(buffer);
     buffer = result;
@@ -339,7 +339,7 @@ HAProxy.prototype.weight = function weights(backend, server, weight) {
   //
   if ('function' === typeof args[args.length - 1]) fn = args.pop();
 
-  if (arguments.length === 3) {
+  if (args.length === 3) {
     return this.send('set weight %s/%s %d', backend, server, +weight).call(fn);
   }
 
