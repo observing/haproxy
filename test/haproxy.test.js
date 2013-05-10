@@ -13,7 +13,7 @@ describe('haproxy', function () {
   //
   var server;
   before(function before(done) {
-    server = hamock.createServer().listen(done);
+    server = hamock.createServer({ socket: '/tmp/fixture.sock' }).listen(done);
   });
 
   after(function after(done) {
@@ -57,22 +57,87 @@ describe('haproxy', function () {
   });
 
   describe('#clear', function () {
-    it('should clear the counters');
-    it('should clear all the counters');
+    it('should clear the counters', function (done) {
+      var proxy = new HAProxy({ socket: '/tmp/fixture.sock' });
+      proxy.clear(done);
+    });
+
+    it('should clear all the counters', function (done) {
+      var proxy = new HAProxy({ socket: '/tmp/fixture.sock' });
+      proxy.clear(true, done);
+    });
   });
 
   describe('#disable', function () {
-    it('should disable the given backend');
-    it('should ignore errors when the backend is already disabled');
-    it('should error when a non existing backend is given');
-    it('should error when a non existing server is given');
+    it('should disable the given backend', function (done) {
+      var proxy = new HAProxy({ socket: '/tmp/fixture.sock' });
+
+      proxy.disable('realtime', 'node1', done);
+    });
+
+    it('should ignore errors when the backend is already disabled', function (done) {
+      var proxy = new HAProxy({ socket: '/tmp/fixture.sock' });
+
+      proxy.disable('realtime', 'node1', done);
+    });
+
+    it('should error when a non existing backend is given', function (done) {
+      var proxy = new HAProxy({ socket: '/tmp/fixture.sock' });
+
+      proxy.disable('realtimer', 'node1', function (err) {
+        expect(err).to.be.instanceOf(Error);
+        expect(err.message).to.equal('No such backend.');
+
+        done();
+      });
+    });
+
+    it('should error when a non existing server is given', function (done) {
+      var proxy = new HAProxy({ socket: '/tmp/fixture.sock' });
+
+      proxy.disable('realtime', 'node2', function (err) {
+        expect(err).to.be.instanceOf(Error);
+        expect(err.message).to.equal('No such server.');
+
+        done();
+      });
+    });
   });
 
   describe('#enable', function () {
-    it('should enable a disabled backed');
-    it('should not give errors when the backend is already enabled');
-    it('should error when a non existing backend is given');
-    it('should error when a non existing server is given');
+    it('should enable a disabled backed', function (done) {
+      var proxy = new HAProxy({ socket: '/tmp/fixture.sock' });
+
+      proxy.enable('realtime', 'node1', done);
+    });
+
+    it('should not give errors when the backend is already enabled', function (done) {
+      var proxy = new HAProxy({ socket: '/tmp/fixture.sock' });
+
+      proxy.enable('realtime', 'node1', done);
+    });
+
+    it('should error when a non existing backend is given', function (done) {
+      var proxy = new HAProxy({ socket: '/tmp/fixture.sock' });
+
+      proxy.enable('realtimer', 'node1', function (err) {
+        expect(err).to.be.instanceOf(Error);
+        expect(err.message).to.equal('No such backend.');
+
+        done();
+      });
+    });
+
+    it('should error when a non existing server is given', function (done) {
+      var proxy = new HAProxy({ socket: '/tmp/fixture.sock' });
+
+      proxy.enable('realtime', 'node2', function (err) {
+        expect(err).to.be.instanceOf(Error);
+        expect(err.message).to.equal('No such server.');
+
+        done();
+      });
+    });
   });
 
   describe('#pause', function () {
@@ -118,6 +183,19 @@ describe('haproxy', function () {
   });
 
   describe('#info', function () {
-    it('returns an object with the HAProxy info');
+    it('returns an object with the HAProxy info', function (done) {
+      var proxy = new HAProxy({ socket: '/tmp/fixture.sock' });
+
+      proxy.info(function (err, data) {
+        expect(err).to.not.be.instanceOf(Error);
+        expect(data).to.be.a('object');
+
+        expect(data.Tasks).to.equal(33);
+        expect(data.PipesFree).to.equal(0);
+        expect(data.Uptime).to.equal('0d 0h08m10s');
+
+        done();
+      });
+    });
   });
 });

@@ -1,5 +1,5 @@
 /*globals beforeEach, afterEach*/
-describe('parser', function () {
+describe('haproxy:configuration', function () {
   'use strict';
 
   var chai = require('chai')

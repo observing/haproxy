@@ -249,7 +249,7 @@ HAProxy.prototype.clear = function clear(all, fn) {
     all = null;
   }
 
-  return this.send('clear counters %s', all ? ' all' : '').call(fn);
+  return this.send('clear counters %s', all ? 'all' : '').call(fn);
 };
 
 /**

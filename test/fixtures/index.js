@@ -22,5 +22,16 @@ module.exports = {
   'show info': read('showinfo'),
   'show stat': read('showstat'),
   'show stat -1 -1 -1': read('showstatall'),
-  'show sess': read('showsess')
+  'show sess': read('showsess'),
+
+  'clear counters': read('empty'),
+  'clear counters all': read('empty'),
+
+  'disable server realtime/node1': read('empty'),
+  'disable server realtime/node2': read('noserver'),
+  'disable server realtimer/node1': read('nobackend'),
+
+  'enable server realtime/node1': read('empty'),
+  'enable server realtime/node2': read('noserver'),
+  'enable server realtimer/node1': read('nobackend')
 };

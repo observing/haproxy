@@ -24,7 +24,7 @@ function Hamock(options) {
   this.server = options.server || net.createServer({ allowHalfOpen: true });
   this.server.on('connection', this.handle.bind(this));
   this.commands = options.commands || require('./fixtures');
-  this.socket = '/tmp/haproxy.sock';
+  this.socket = options.socket || '/tmp/haproxy.sock';
   this.sockets = [];
 }
 
@@ -46,7 +46,7 @@ Hamock.prototype.handle = function handle(socket) {
     var handler = command.trim()
       , data = this.commands[handler];
 
-    socket.end(data || 'Unkown command');
+    socket.end(data || 'Unkown command: "'+ handler +'"');
   }.bind(this));
 
   socket.once('close', function close() {
