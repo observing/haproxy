@@ -457,6 +457,11 @@ HAProxy.prototype.stat = function stat() {
  * @api public
  */
 HAProxy.prototype.load = HAProxy.prototype.read = function load(path, fn) {
+  if ('function' === typeof path) {
+     fn = path;
+     path = null;
+  }
+
   this.config.read(path || this.cfg, fn);
   return this;
 };
@@ -469,6 +474,11 @@ HAProxy.prototype.load = HAProxy.prototype.read = function load(path, fn) {
  * @api public
  */
 HAProxy.prototype.save = HAProxy.prototype.write = function save(path, fn) {
+  if ('function' === typeof path) {
+     fn = path;
+     path = null;
+  }
+
   this.config.write(path || this.cfg, fn);
   return this;
 };
