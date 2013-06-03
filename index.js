@@ -135,7 +135,7 @@ HAProxy.prototype.send = function send(command) {
       self.emit('haproxy:down', err);
     }
   }).once('end', function end() {
-    self.parse(using, buffer.trim(), fn);
+    self.parse(using, buffer.trim(), fn, command);
     buffer = '';
   });
 
@@ -184,8 +184,10 @@ HAProxy.prototype.send = function send(command) {
  * @param {String} using How should the data be parsed
  * @param {String} buffer The response from the socket
  * @param {Functon} fn Callback function.
+ * @param {String} command The command that issued this.
+ * @api private
  */
-HAProxy.prototype.parse = function parse(using, buffer, fn) {
+HAProxy.prototype.parse = function parse(using, buffer, fn, command) {
   var result, err;
 
   //
@@ -227,6 +229,7 @@ HAProxy.prototype.parse = function parse(using, buffer, fn) {
     result = { current: +data[1], initial: +data[2] };
   } else {
     err = new Error(buffer);
+    err.command = command;
     buffer = result;
   }
 
