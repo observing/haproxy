@@ -4,8 +4,8 @@ env:
   - NODE_ENV=test
 
 node_js:
-  - 0.8
-  - 0.10
+  - "0.8"
+  - "0.10"
 
 before_script:
   - sudo apt-get install -qq build-essential libssl-dev libev-dev
