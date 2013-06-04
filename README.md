@@ -128,7 +128,7 @@ haproxy.start(function (err) {
 });
 ```
 
-### HAProxy.start([all], fn)
+### HAProxy.stop([all], fn)
 
 Stops the currently running HAProxy process, even if it's not started using
 `HAProxy.start` it will find the process using the supplied pidFile argument or
