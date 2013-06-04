@@ -286,6 +286,49 @@ describe('haproxy:orchestrator', function () {
     });
   });
 
+  describe('#softstop', function () {
+    this.timeout(timeout + 500);
+
+    it('killing me softly (with his song)', function (done) {
+      var haproxy = new HAProxy(sock, {
+          config: orchestrator
+        , pidFile: pidFile
+      });
+
+      function finish() {
+        if (++finish.done === 2) done();
+      }
+      finish.done = 0;
+
+      //
+      // The request will take at least 5 seconds to complete
+      //
+      haproxy.start(function (err) {
+        if (err) return done(err);
+
+        request('http://localhost:8080/foo/', function (err, res, body) {
+          if (err) return done(err);
+
+          expect(body).to.include('server');
+          expect(body).to.include('ello from port');
+
+          finish();
+        });
+
+        var start = Date.now();
+        setTimeout(function () {
+          haproxy.softstop(function (err) {
+            if (err) return done(err);
+
+            expect(Date.now() - start).to.be.above(timeout);
+            expect(haproxy.orchestrator.pid).to.equal('');
+            finish();
+          });
+        }, 100);
+      });
+    });
+  });
+
   describe('#reload', function (done) {
     this.timeout(timeout + 500);
 
@@ -316,12 +359,14 @@ describe('haproxy:orchestrator', function () {
         });
 
         var start = Date.now();
-        haproxy.reload(function (err) {
-          if (err) return done(err);
+        setTimeout(function () {
+          haproxy.reload(function (err) {
+            if (err) return done(err);
 
-          expect(Date.now() - start).to.be.below(timeout);
-          finish();
-        });
+            expect(Date.now() - start).to.be.below(timeout);
+            finish();
+          });
+        }, 100);
       });
     });
 
@@ -343,17 +388,19 @@ describe('haproxy:orchestrator', function () {
         if (err) return done(err);
 
         request('http://localhost:8080/foo/', function (err, res) {
-          expect(err.message).to.include('hang up');
+          if (err) expect(err.message).to.include('hang up');
           finish();
         });
 
         var start = Date.now();
-        haproxy.reload(true, function (err) {
-          if (err) return done(err);
+        setTimeout(function () {
+          haproxy.reload(true, function (err) {
+            if (err) return done(err);
 
-          expect(Date.now() - start).to.be.below(timeout);
-          finish();
-        });
+            expect(Date.now() - start).to.be.below(timeout);
+            finish();
+          });
+        }, 100);
       });
     });
 
