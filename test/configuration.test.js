@@ -197,14 +197,18 @@ describe('haproxy:configuration', function () {
         });
       });
     });
+
+    it('doesnt care about the comment style used in the config', function (done) {
+      parser.read(__dirname + '/fixtures/comment.cfg', done);
+    });
   });
 
   describe('#has', function () {
     it('checks if key is start of content', function () {
       var content = 'mode http';
 
-      expect(Configuration.has(content, 'mode')).to.be.true;
-      expect(Configuration.has(content, 'http')).to.be.false;
+      expect(Configuration.has(content, 'mode')).to.equal(true);
+      expect(Configuration.has(content, 'http')).to.equal(false);
     });
   });
 
