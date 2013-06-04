@@ -24,7 +24,14 @@
     "url": "git@github.com:observing/haproxy.git"
   },
   "keywords": [
-    "HAProxy"
+    "HAProxy",
+    "proxy",
+    "load balancer",
+    "orchestration",
+    "cloud",
+    "reverse",
+    "load",
+    "balancer"
   ],
   "author": "Arnout Kazemier <opensource@observe.it>",
   "license": "MIT"
