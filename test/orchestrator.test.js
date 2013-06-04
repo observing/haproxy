@@ -1,7 +1,8 @@
 describe('haproxy:orchestrator', function () {
   'use strict';
 
-  var HAProxy = require('../')
+  var request = require('request')
+    , HAProxy = require('../')
     , chai = require('chai')
     , expect = chai.expect;
 
@@ -12,7 +13,9 @@ describe('haproxy:orchestrator', function () {
     , pidFile = path.resolve(__dirname, 'haproxy.pid')
     , fixtures = path.resolve(__dirname, 'fixtures')
     , orchestrator = fixtures + '/orchestrator.cfg'
-    , sock = '/tmp/haproxy.sock';
+    , sock = '/tmp/haproxy.sock'
+    , timeout = 5000
+    , servers;
 
   chai.Assertion.includeStack = true;
 
@@ -21,6 +24,8 @@ describe('haproxy:orchestrator', function () {
   // failures because we still have a haproxy running locally for testing
   // purposes.
   //
+  // In addition to that
+  //
   before(function (done) {
     var haproxy = new HAProxy();
 
@@ -28,7 +33,41 @@ describe('haproxy:orchestrator', function () {
     // Attempt to clean up all established HAProxies that are started
     //
     haproxy.stop(true, function () {
-      done();
+      var online = 0;
+
+      servers = [8083, 8084].reduce(function (set, port) {
+        var app = require('http').createServer(function (req, res) {
+          res.statusCode = 200;
+          res.setHeader('Content-Type', 'text/html');
+
+          var interval = setInterval(function () {
+            res.write('server\n');
+          }, 100);
+
+
+          setTimeout(function () {
+            clearInterval(interval);
+            res.end('Hello from port: '+port);
+          }, timeout);
+        });
+
+        set['srv'+ port] = app;
+
+        app.listen(port, function () {
+          if (++online === 2) done();
+        });
+
+        return set;
+      }, {});
+    });
+  });
+
+  //
+  // As we generated HTTP servers, we need to close them again.
+  //
+  after(function () {
+    Object.keys(servers).forEach(function close(id) {
+      servers[id].close();
     });
   });
 
@@ -48,6 +87,7 @@ describe('haproxy:orchestrator', function () {
           if (err) return done(err);
 
           haproxy.running(function (err, running) {
+
             if (err) return done(err);
 
             expect(running).to.equal(true);
@@ -246,12 +286,83 @@ describe('haproxy:orchestrator', function () {
     });
   });
 
-  describe('#reload', function () {
-    it('should gracefully reload the server');
+  describe('#reload', function (done) {
+    this.timeout(timeout + 500);
 
-    it('should drop all the connections');
+    it('should gracefully reload the server', function (done) {
+      var haproxy = new HAProxy(sock, {
+          config: orchestrator
+        , pidFile: pidFile
+      });
 
-    it('set a new pid');
+      //
+      // The request will take at least 5 seconds to complete
+      //
+      haproxy.start(function (err) {
+        if (err) return done(err);
+
+        request('http://localhost:8080/foo/', function (err, res, body) {
+          if (err) throw err;
+
+          expect(body).to.include('server');
+          expect(body).to.include('hello from port');
+        });
+
+        var start = Date.now();
+        haproxy.reload(function (err) {
+          if (err) return done(err);
+
+          expect(Date.now() - start).to.be.below(timeout);
+          done();
+        });
+      });
+    });
+
+    it('should reload the server instantly', function (done) {
+      var haproxy = new HAProxy(sock, {
+          config: orchestrator
+        , pidFile: pidFile
+      });
+
+      //
+      // The request will take at least 5 seconds to complete
+      //
+      haproxy.start(function (err) {
+        if (err) return done(err);
+
+        request('http://localhost:8080/foo/', function (err, res) {
+          if (err) expect(err.message).to.include('hang up');
+        });
+
+        var start = Date.now();
+        haproxy.reload(true, function (err) {
+          if (err) return done(err);
+
+          expect(Date.now() - start).to.be.below(timeout);
+          done();
+        });
+      });
+    });
+
+    it('set a new pid', function (done) {
+      var haproxy = new HAProxy(sock, {
+          config: orchestrator
+        , pidFile: pidFile
+      });
+
+      haproxy.start(function (err) {
+        if (err) return done(err);
+
+        var pid = haproxy.orchestrator.pid;
+
+        haproxy.reload(function (err) {
+          if (err) return done(err);
+
+          expect(haproxy.orchestrator.pid).to.not.equal(pid);
+          haproxy.stop(done);
+        });
+      });
+    });
   });
 
   describe('#verify', function () {

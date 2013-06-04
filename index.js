@@ -490,7 +490,9 @@ HAProxy.prototype.save = HAProxy.prototype.write = function save(path, fn) {
 // The following methods are proxied from the Orchestrator. For relevant
 // documentation please see the orchestrator.js
 //
-['start', 'stop', 'reload', 'verify', 'running'].forEach(function each(method) {
+[
+  'start', 'stop', 'softstop', 'reload', 'verify', 'running'
+].forEach(function each(method) {
   if (method in HAProxy.prototype) throw new Error('HAProxy#'+ method +' is duplicate');
 
   HAProxy.prototype[method] = function proxy() {
