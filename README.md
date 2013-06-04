@@ -113,7 +113,86 @@ haproxy.method().and.method2('value').and.method3('value', function () {
 
 The following methods are available:
 
-### HAProxy.clear(all, fn)
+### HAProxy.start(fn)
+
+Start a new HAProxy instance with the given configuration. It will verify the
+configuration before it attempts to start HAProxy. The process will
+automatically be daemonized and the pidFile will be stored in the supplied
+pidFile location or default to `/var/run/haproxy.pid`.
+
+Please note that it does not check if there are any HAProxy processes running.
+
+```js
+haproxy.start(function (err) {
+  .. yay it's started ..
+});
+```
+
+### HAProxy.start([all], fn)
+
+Stops the currently running HAProxy process, even if it's not started using
+`HAProxy.start` it will find the process using the supplied pidFile argument or
+scans the process list for a running process.
+
+When the `all` boolean is supplied it will kill all running HAProxy processes
+instead of the first one it found.
+
+```js
+haproxy.stop(function (err) {
+ .. the proxy is stopped ..
+});
+```
+
+### HAProxy.softstop(fn)
+
+This executes a softstop on all running HAProxy installations. So instead of
+termining all active connections it will wait for them to finish and then, kill
+the process.
+
+```js
+haproxy.softstop(function (err) {
+  .. wheee ..
+});
+```
+
+### HAProxy.reload([hard], fn)
+
+Hot reload the configuration with the minimal amount of downtime. If the `hard`
+boolean is given it will terminate the process forcefully and kill all active
+connections.
+
+Before it reloads it will again, verify the configuration so we don't create any
+broken mess.
+
+```js
+haproxy.reload(function (err) {
+  .. the proxy has reloaded ..
+});
+```
+
+### HAProxy.verify(fn)
+
+Verify the given configuration to see if it's all in working order.
+
+```js
+HAProxy.verify(function (err, working) {
+ .. failed to do things ..
+ if (working) .. yay configuration is working ..
+});
+```
+
+### HAProxy.running(fn)
+
+Scans the system for running HAProxy instances. It's mostly used internally but
+it might be useful for you as well.
+
+```js
+HAProxy.running(function (err, running) {
+  if (running) .. yup, process running .. 
+});
+```
+
+### HAProxy.clear([all], fn)
 
 Clear the max values of the statistic counts in the proxy for each front-end and
 backend. When the `all` boolean is supplied it will clean all the stats. This

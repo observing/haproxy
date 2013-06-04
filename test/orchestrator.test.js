@@ -44,7 +44,6 @@ describe('haproxy:orchestrator', function () {
             res.write('server\n');
           }, 100);
 
-
           setTimeout(function () {
             clearInterval(interval);
             res.end('Hello from port: '+port);

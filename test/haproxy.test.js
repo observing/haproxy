@@ -1,23 +1,68 @@
 describe('haproxy', function () {
   'use strict';
 
-  var hamock = require('./hamock')
+  var request = require('request')
+    , hamock = require('./hamock')
     , HAProxy = require('../')
     , chai = require('chai')
     , expect = chai.expect;
+
+
+  //
+  // The location of the fixtures directory.
+  //
+  var path = require('path')
+    , pidFile = path.resolve(__dirname, 'haproxy.pid')
+    , fixtures = path.resolve(__dirname, 'fixtures')
+    , orchestrator = fixtures + '/orchestrator.cfg'
+    , sock = '/tmp/haproxy.sock'
+    , timeout = 5000
+    , servers
+    , server;
 
   chai.Assertion.includeStack = true;
 
   //
   // Create a mockup server that responds with identical output as the HAProxy.
   //
-  var server;
   before(function before(done) {
-    server = hamock.createServer({ socket: '/tmp/fixture.sock' }).listen(done);
+    var online = 0;
+
+    server = hamock.createServer({ socket: '/tmp/fixture.sock' }).listen(function () {
+      if (++online === 2) done();
+    });
+
+    servers = [8083, 8084].reduce(function (set, port) {
+      var app = require('http').createServer(function (req, res) {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'text/html');
+
+        var interval = setInterval(function () {
+          res.write('server\n');
+        }, 100);
+
+        setTimeout(function () {
+          clearInterval(interval);
+          res.end('Hello from port: '+port);
+        }, timeout);
+      });
+
+      set['srv'+ port] = app;
+
+      app.listen(port, function () {
+        if (++online === 2) done();
+      });
+
+      return set;
+    }, {});
   });
 
-  after(function after(done) {
-    server.close(done);
+  after(function after() {
+    Object.keys(servers).forEach(function close(id) {
+      servers[id].close();
+    });
+
+    server.close();
   });
 
   it('is exported as a function', function () {
