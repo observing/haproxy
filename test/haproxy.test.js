@@ -56,6 +56,51 @@ describe('haproxy', function () {
     });
   });
 
+  describe('#load', function () {
+    it('has #read as alias', function () {
+      var proxy = new HAProxy('/foo.sock');
+
+      expect(proxy.load).to.equal(proxy.read);
+    });
+
+    it('reads the given configuration file', function (done) {
+      var proxy = new HAProxy('/foo.sock', { config: __dirname + '/fixtures/default.cfg' });
+
+      proxy.load(__dirname + '/fixtures/comment.cfg', function (err, data) {
+        if (err) return done(err);
+
+        expect(data).to.include('different comment styles');
+        expect(data).to.not.include('maximum time to wait for a connection attempt');
+        done();
+      });
+    });
+
+    it('reads the config from the options', function (done) {
+      var proxy = new HAProxy('/foo.sock', { config: __dirname + '/fixtures/default.cfg' });
+
+      proxy.load(function (err, data) {
+        if (err) return done(err);
+
+        expect(data).to.not.include('different comment styles');
+        expect(data).to.include('maximum time to wait for a connection attempt');
+        done();
+      });
+    });
+
+    it('parses the configration', function (done) {
+      var proxy = new HAProxy('/foo.sock', { config: __dirname + '/fixtures/default.cfg' });
+
+      proxy.load(function (err, data) {
+        if (err) return done(err);
+
+        expect(data).to.equal(proxy.config.source);
+        expect(proxy.config.get('global', 'general', 'pidfile')).to.equal('/tmp/haproxy.pid');
+
+        done();
+      });
+    });
+  });
+
   describe('#clear', function () {
     it('should clear the counters', function (done) {
       var proxy = new HAProxy({ socket: '/tmp/fixture.sock' });
