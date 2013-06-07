@@ -77,7 +77,6 @@ HAProxy.prototype.__proto__ = EventEmitter.prototype;
 Object.defineProperty(HAProxy.prototype, 'config', {
   get: function get() {
     this.config = new Configuration();
-    this.read();
     return this.config;
   },
   set: function set(value) {
