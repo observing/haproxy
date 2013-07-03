@@ -340,12 +340,12 @@ haproxy.session(function (err, sess) {
 });
 ```
 
-### HAProxy.stats(id, type, id, fn)
+### HAProxy.stat(id, type, id, fn)
 
 Dump all statistics, if you want everything, supply -1 for all values.
 
 ```js
-haproxy.stats('-1', '-1', '-1', function () {
+haproxy.stat('-1', '-1', '-1', function () {
 
 });
 ```
