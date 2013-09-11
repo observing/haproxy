@@ -18,3 +18,5 @@ before_script:
 
 notifications:
   irc: "irc.freenode.org#observing"
+  on_success: change
+  on_failure: change
