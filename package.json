@@ -1,7 +1,7 @@
 {
   "name": "haproxy",
-  "version": "0.0.2",
-  "description": "HAProxy management module",
+  "version": "0.0.3",
+  "description": "HAProxy management and orchestration module",
   "main": "index.js",
   "dependencies": {
     "dsv": "0.0.x",
