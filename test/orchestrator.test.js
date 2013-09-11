@@ -70,6 +70,17 @@ describe('haproxy:orchestrator', function () {
     });
   });
 
+  it('prefixes the haproxy command', function () {
+    var haproxy = new HAProxy(sock, {
+        config: orchestrator
+      , pidFile: pidFile
+      , prefix: 'sudo'
+    });
+
+    expect(haproxy.orchestrator.which).to.contain('sudo /');
+    expect(haproxy.orchestrator.which).to.contain('haproxy');
+  });
+
   describe('#running', function () {
     it('should check if the current process is still running', function (done) {
       var haproxy = new HAProxy(sock, {

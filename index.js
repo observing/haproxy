@@ -59,10 +59,11 @@ function HAProxy(socket, options) {
   // Create a new `haproxy` orchestrator which interacts with the binary.
   //
   this.orchestrator = new Orchestrator({
+    discover: options.discover,
+    pidFile: options.pidFile,
+    prefix: options.prefix,
     which: options.which,
     pid: options.pid,
-    pidFile: options.pidFile,
-    discover: options.discover,
     config: this.cfg
   });
 }

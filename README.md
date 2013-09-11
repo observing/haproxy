@@ -83,6 +83,7 @@ are supported:
 - `discover`: Tries to find your HAProxy instance if you don't know the pid
 - `socket`: The location of the unix socket
 - [optional] `which`: The location of the HAProxy
+- [optional] `prefix`: Prefixes the HAProxy commands. Useful for `sudo`
 
 There's a lot of freedom in this module, callbacks are always optional so you
 can do fire and forget management as well as how you add the callbacks.
