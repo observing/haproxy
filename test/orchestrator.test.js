@@ -77,7 +77,7 @@ describe('haproxy:orchestrator', function () {
       , prefix: 'sudo'
     });
 
-    expect(haproxy.orchestrator.which).to.contain('sudo /');
+    expect(haproxy.orchestrator.prefix).to.equal('sudo');
     expect(haproxy.orchestrator.which).to.contain('haproxy');
   });
 
