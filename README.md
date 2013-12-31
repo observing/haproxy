@@ -346,7 +346,7 @@ haproxy.session(function (err, sess) {
 Dump all statistics, if you want everything, supply -1 for all values.
 
 ```js
-haproxy.stat('-1', '-1', '-1', function () {
+haproxy.stat('-1', '-1', '-1', function (err, stats) {
 
 });
 ```
