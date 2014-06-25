@@ -28,13 +28,13 @@ npm install haproxy --save
 ## Testing
 
 Tests can be executed after installation by running `npm test`. For test to run
-properly *Haproxy 1.5dev18* or greater is required. See commands below:
+properly *Haproxy 1.5.1* or greater is required. See commands below:
 
 ```
 sudo apt-get install -qq build-essential libssl-dev libev-dev
-wget http://haproxy.1wt.eu/download/1.5/src/devel/haproxy-1.5-dev18.tar.gz
-tar xzvf haproxy-1.5-dev18.tar.gz
-cd haproxy-1.5-dev18
+wget http://haproxy.1wt.eu/download/1.5/src/devel/haproxy-1.5.1.tar.gz
+tar xzvf haproxy-1.5.1.tar.gz
+cd haproxy-1.5.1
 make TARGET=linux26 USE_OPENSSL=1
 sudo make install
 
@@ -189,7 +189,7 @@ it might be useful for you as well.
 
 ```js
 HAProxy.running(function (err, running) {
-  if (running) .. yup, process running .. 
+  if (running) .. yup, process running ..
 });
 ```
 
