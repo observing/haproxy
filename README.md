@@ -32,13 +32,23 @@ properly *Haproxy 1.5.1* or greater is required. See commands below:
 
 ```
 sudo apt-get install -qq build-essential libssl-dev libev-dev
-wget http://haproxy.1wt.eu/download/1.5/src/devel/haproxy-1.5.1.tar.gz
+wget http://www.haproxy.org/download/1.5/src/haproxy-1.5.1.tar.gz
 tar xzvf haproxy-1.5.1.tar.gz
 cd haproxy-1.5.1
 make TARGET=linux26 USE_OPENSSL=1
 sudo make install
 
 npm test
+```
+
+If you are running a mac:
+
+```
+curl -O http://www.haproxy.org/download/1.5/src/haproxy-1.5.1.tar.gz
+tar xzvf haproxy-1.5.1.tar.gz
+cd haproxy-1.5.1
+make TARGET=generic USE_OPENSSL=1
+sudo make install
 ```
 
 ## haproxy.cfg
