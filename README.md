@@ -35,20 +35,20 @@ sudo apt-get install -qq build-essential libssl-dev libev-dev
 wget http://www.haproxy.org/download/1.5/src/haproxy-1.5.1.tar.gz
 tar xzvf haproxy-1.5.1.tar.gz
 cd haproxy-1.5.1
-make TARGET=linux26 USE_OPENSSL=1
 sudo make install
 
 npm test
 ```
 
-If you are running a mac:
+- For Linux run: `make TARGET=linux26 USE_OPENSSL=1`
+- For Solaris/Smart OS: `make TARGET=solaris USE_OPENSSL=1`
+- For Mac: `make TARGET=generic USE_OPENSSL=1`
+
+And finally run:
 
 ```
-curl -O http://www.haproxy.org/download/1.5/src/haproxy-1.5.1.tar.gz
-tar xzvf haproxy-1.5.1.tar.gz
-cd haproxy-1.5.1
-make TARGET=generic USE_OPENSSL=1
 sudo make install
+npm test
 ```
 
 ## haproxy.cfg
@@ -168,9 +168,8 @@ haproxy.softstop(function (err) {
 
 ### HAProxy.reload([hard], fn)
 
-Hot reload the configuration with the minimal amount of downtime. If the `hard`
-boolean is given it will terminate the process forcefully and kill all active
-connections.
+Hot reload the configuration without any downtime. If the `hard` boolean is
+given it will terminate the process forcefully and kill all active connections.
 
 Before it reloads it will again, verify the configuration so we don't create any
 broken mess.
