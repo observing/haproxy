@@ -5,16 +5,16 @@
   "main": "index.js",
   "dependencies": {
     "dsv": "0.0.x",
-    "which": "~1.0.5",
-    "mkdirp": "~0.3.5"
+    "which": "1.0.x",
+    "mkdirp": "0.5.x"
   },
   "devDependencies": {
     "pre-commit": "0.0.x",
-    "mocha": "1.9.x",
-    "sinon": "1.6.x",
-    "sinon-chai": "2.3.x",
-    "chai": "1.5.x",
-    "request": "~2.20.0"
+    "mocha": "1.21.x",
+    "sinon": "1.10.x",
+    "sinon-chai": "2.4.x",
+    "chai": "1.9.x",
+    "request": "2.42.x"
   },
   "scripts": {
     "test": "NODE_ENV=testing ./node_modules/.bin/mocha $(find test -name '*.test.js')"
