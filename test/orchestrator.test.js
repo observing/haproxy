@@ -17,7 +17,7 @@ describe('haproxy:orchestrator', function () {
     , timeout = 5000
     , servers;
 
-  chai.Assertion.includeStack = true;
+  chai.config.includeStack = true;
 
   //
   // Make sure that every process is dead before we start so we don't get random

@@ -11,7 +11,7 @@ describe('haproxy:configuration', function () {
     , parser = new Configuration()
     , fs = require('fs');
 
-  chai.Assertion.includeStack = true;
+  chai.config.includeStack = true;
   chai.use(sinonChai);
 
   afterEach(function () {

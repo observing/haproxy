@@ -17,7 +17,7 @@
     "request": "2.42.x"
   },
   "scripts": {
-    "test": "NODE_ENV=testing ./node_modules/.bin/mocha $(find test -name '*.test.js')"
+    "test": "NODE_ENV=testing mocha --ui bdd --reporter spec ./test/*.test.js"
   },
   "repository": {
     "type": "git",

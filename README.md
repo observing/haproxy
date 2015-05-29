@@ -19,7 +19,8 @@ running as a daemon.
 
 ## Installation
 
-The package is released in `npm`, the Node.js package registry:
+The package is released in `npm`, the Node.js package registry. To add it as a
+dependency to any project, do:
 
 ```
 npm install haproxy --save
@@ -28,25 +29,35 @@ npm install haproxy --save
 ## Testing
 
 Tests can be executed after installation by running `npm test`. For test to run
-properly *Haproxy 1.5.1* or greater is required. See commands below:
+properly *Haproxy 1.5.12* or greater is required. See commands below:
 
-```
+```bash
 sudo apt-get install -qq build-essential libssl-dev libev-dev
-wget http://www.haproxy.org/download/1.5/src/haproxy-1.5.1.tar.gz
-tar xzvf haproxy-1.5.1.tar.gz
-cd haproxy-1.5.1
+wget http://www.haproxy.org/download/1.5/src/haproxy-1.5.12.tar.gz
+tar xzvf haproxy-1.5.12.tar.gz
+cd haproxy-1.5.12
+
+# On OSX, see below for different OS.
+sudo make TARGET=generic USE_OPENSSL=1
 sudo make install
+
+# Create config file haproxy.cfg, see below for details.
+echo 'global\n\r  stats socket /tmp/haproxy.sock level admin' > haproxy.cfg
+
+# Start haproxy
+/path/to/haproxy
 
 npm test
 ```
 
 - For Linux run: `make TARGET=linux26 USE_OPENSSL=1`
 - For Solaris/Smart OS: `make TARGET=solaris USE_OPENSSL=1`
-- For Mac: `make TARGET=generic USE_OPENSSL=1`
+- For OSX: `make TARGET=generic USE_OPENSSL=1`
 
 And finally run:
 
 ```
+npm install
 sudo make install
 npm test
 ```
