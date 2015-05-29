@@ -1,10 +1,8 @@
-/*globals beforeEach, afterEach*/
-describe('haproxy:configuration', function () {
-  'use strict';
+'use strict';
 
+describe('haproxy:configuration', function () {
   var chai = require('chai')
-    , sinonChai = require('sinon-chai')
-    , sinon = require('sinon')
+    , path = require('path')
     , expect = chai.expect;
 
   var Configuration = require('../lib/configuration')
@@ -12,7 +10,6 @@ describe('haproxy:configuration', function () {
     , fs = require('fs');
 
   chai.config.includeStack = true;
-  chai.use(sinonChai);
 
   afterEach(function () {
     parser.reset();
@@ -61,8 +58,7 @@ describe('haproxy:configuration', function () {
   });
 
   it('section default has key specific setters', function () {
-    var value = 'this value makes no sense as config'
-      , comment = 'add some comment to mode';
+    var value = 'this value makes no sense as config';
 
     // Some random bitmasked methods, testing against all keys is pointless
     parser.defaults().mode(value);
@@ -88,8 +84,6 @@ describe('haproxy:configuration', function () {
     });
 
     it('does nothing if the key is not allowed for the section', function () {
-      var func = parser.set('defaults', 'general', 'bind', value);
-
       // Will not have defaults nor bind.
       expect(parser.data).to.not.have.property('defaults');
 
@@ -149,13 +143,16 @@ describe('haproxy:configuration', function () {
 
   describe('#write', function () {
     it('stores proper cfg config', function (done) {
-      var data = require(__dirname + '/fixtures/default');
+      var data = require(path.join(__dirname, 'fixtures', 'default'));
 
       parser.data = data;
-      parser.write('/tmp/test.cfg', function (err) {
-        fs.readFile(__dirname + '/fixtures/default.cfg', 'utf-8', function (err, origin) {
-          fs.readFile('/tmp/test.cfg', 'utf-8', function (err, data) {
-            expect(origin.trim()).to.equal(data.trim());
+      parser.write('/tmp/test.cfg', function () {
+        fs.readFile(path.join(__dirname, 'fixtures', 'default.cfg'), 'utf-8', function (error, origin) {
+          if (error) return done(error);
+
+          fs.readFile('/tmp/test.cfg', 'utf-8', function (err, read) {
+            if (err) return done(err);
+            expect(origin.trim()).to.equal(read.trim());
             done();
           });
         });
@@ -163,12 +160,16 @@ describe('haproxy:configuration', function () {
     });
 
     it('format is specified by file extension', function (done) {
-      var data = require(__dirname + '/fixtures/default');
+      var data = require(path.join(__dirname, 'fixtures', 'default'));
 
       parser.data = data;
-      parser.write('/tmp/test.json', function (err) {
-        fs.readFile(__dirname + '/fixtures/default.json', 'utf-8', function (err, origin) {
-          fs.readFile('/tmp/test.json', 'utf-8', function (err, data) {
+      parser.write('/tmp/test.json', function () {
+        fs.readFile(path.join(__dirname, 'fixtures', 'default.json'), 'utf-8', function (err, origin) {
+          if (err) return done(err);
+
+          fs.readFile('/tmp/test.json', 'utf-8', function (error, data) {
+            if (error) return done(error);
+
             expect(origin.trim()).to.equal(data.trim());
             done();
           });
@@ -179,9 +180,13 @@ describe('haproxy:configuration', function () {
 
   describe('#read', function () {
     it('reads cfg config to usable object', function (done) {
-      parser.read(__dirname + '/fixtures/default.cfg', function () {
-        fs.readFile(__dirname + '/fixtures/default.json', 'utf-8', function (err, data) {
+      parser.read(path.join(__dirname, 'fixtures', 'default.cfg'), function () {
+        fs.readFile(path.join(__dirname, 'fixtures', 'default.json'), 'utf-8', function (err, data) {
+          if (err) return done(err);
+
+          //
           // Newline needs to be stripped to get a perfect match.
+          //
           expect(JSON.stringify(parser.data, null, 2)).to.equal(data.trim());
           done();
         });
@@ -189,9 +194,13 @@ describe('haproxy:configuration', function () {
     });
 
     it('reads json config to usable object', function (done) {
-      parser.read(__dirname + '/fixtures/default.json', function () {
-        fs.readFile(__dirname + '/fixtures/default.json', 'utf-8', function (err, data) {
+      parser.read(path.join(__dirname, 'fixtures', 'default.json'), function () {
+        fs.readFile(path.join(__dirname, 'fixtures', 'default.json'), 'utf-8', function (err, data) {
+          if (err) return done(err);
+
+          //
           // Newline needs to be stripped to get a perfect match.
+          //
           expect(JSON.stringify(parser.data, null, 2)).to.equal(data.trim());
           done();
         });
@@ -199,7 +208,7 @@ describe('haproxy:configuration', function () {
     });
 
     it('doesnt care about the comment style used in the config', function (done) {
-      parser.read(__dirname + '/fixtures/comment.cfg', done);
+      parser.read(path.join(__dirname, 'fixtures', 'comment.cfg'), done);
     });
   });
 
