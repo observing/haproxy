@@ -4,7 +4,12 @@ are hooked up on the API's yet. Feel free to contribute and build the best
 HAProxy orchestration module out there.
 ```
 
-[![Build Status](https://travis-ci.org/observing/haproxy.png?branch=master)](https://travis-ci.org/observing/haproxy)
+[![Version npm][version]](http://browsenpm.org/package/haproxy)[![Build Status][build]](https://travis-ci.org/observing/haproxy)[![Dependencies][david]](https://david-dm.org/observing/haproxy)[![Coverage Status][cover]](https://coveralls.io/r/observing/haproxy?branch=master)
+
+[version]: http://img.shields.io/npm/v/haproxy.svg?style=flat-square
+[build]: http://img.shields.io/travis/observing/haproxy/master.svg?style=flat-square
+[david]: https://img.shields.io/david/observing/haproxy.svg?style=flat-square
+[cover]: http://img.shields.io/coveralls/observing/haproxy/master.svg?style=flat-square
 
 # haproxy
 
