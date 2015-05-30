@@ -10,7 +10,9 @@
     "tune.rcvbuf.server", "tune.sndbuf.client", "tune.sndbuf.server",
     "tune.ssl.cachesize", "tune.ssl.lifetime", "tune.ssl.maxrecord",
     "tune.zlib.memlevel", "tune.zlib.windowsize", "uid", "ulimit-n",
-    "unix-bind"
+    "unix-bind", "ssl-server-verify", "max-spread-checks", "maxsessrate",
+    "maxsslrate", "nogetaddrinfo", "tune.idletimer", "tune.ssl.force-private-cache",
+    "tune.ssl.default-dh-param"
   ],
   "24": [
     "bind", "capture cookie", "capture request header", "capture response header",
@@ -47,7 +49,8 @@
     "stats hide-version", "stats realm", "stats refresh", "stats scope",
     "stats show-desc", "stats show-legends", "stats show-node", "stats uri",
     "timeout check", "timeout connect", "timeout queue", "timeout server",
-    "timeout tunnel", "option tcp-check", "timeout server-fin"
+    "timeout tunnel", "option tcp-check", "timeout server-fin",
+    "max-keep-alive-queue"
   ],
   "56": [
     "acl", "block", "force-persist", "http-request", "http-response", "id",
