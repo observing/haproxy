@@ -42,13 +42,15 @@ wget http://www.haproxy.org/download/1.5/src/haproxy-1.5.12.tar.gz
 tar xzvf haproxy-1.5.12.tar.gz
 cd haproxy-1.5.12
 
-# On OSX, see below for different OS, after verify that
+# Build haproxy on OSX, see below for different OS, after verify that
 # haproxy is installed and has the correct version.
 sudo make TARGET=generic USE_OPENSSL=1
 sudo make install
 haproxy -v
 
-# Finally run the tests
+# Finally run the tests in the github repository
+git clone git@github.com:observing/haproxy.git
+cd haproxy
 npm test
 ```
 

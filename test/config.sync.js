@@ -5,7 +5,11 @@ var request = require('request')
   , version = process.env.VERSION || '1.5';
 
 /**
+ * Do an 'any' check against each scope of the config.
  *
+ * @param {String} value Option to check.
+ * @returns {Boolean}
+ * @api private
  */
 function check(value) {
   return Object.keys(config).reduce(function check(memo, key) {
@@ -15,9 +19,11 @@ function check(value) {
 }
 
 /**
- * [missing description]
- * @param  {[type]} key [description]
- * @return {[type]}     [description]
+ * Report missing config value.
+ *
+ * @param {String} scope Scope of option.
+ * @param {String} key Config option.
+ * @api private
  */
 function missing(scope, key) {
   if (check(key)) return;
