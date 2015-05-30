@@ -22,14 +22,17 @@
     "option dontlog-normal", "option dontlognull", "option http-use-proxy-header",
     "option log-separate-errors", "option logasap", "option socket-stats",
     "option tcp-smart-accept", "rate-limit sessions", "timeout client",
-    "unique-id-format", "unique-id-header"
+    "unique-id-format", "unique-id-header", "option http-use-proxy-header",
+    "timeout client-fin"
   ],
   "30": [ "maxconn" ],
   "48": [
     "appsession", "dispatch", "http-check expect", "server", "stats admin",
     "stats http-request", "stick match", "stick on", "stick store-request",
     "stick store-response", "stick-table", "tcp-response content",
-    "tcp-response inspect-delay", "use-server"
+    "tcp-response inspect-delay", "use-server", "http-send-name-header",
+    "tcp-check connect", "tcp-check expect", "tcp-check send",
+    "tcp-check send-binary"
   ],
   "52": [
     "balance", "cookie", "default-server", "fullconn", "hash-type",
@@ -44,13 +47,13 @@
     "stats hide-version", "stats realm", "stats refresh", "stats scope",
     "stats show-desc", "stats show-legends", "stats show-node", "stats uri",
     "timeout check", "timeout connect", "timeout queue", "timeout server",
-    "timeout tunnel"
+    "timeout tunnel", "option tcp-check", "timeout server-fin"
   ],
   "56": [
-    "acl", "block", "force-persist", "http-request", "id", "ignore-persist",
-    "redirect", "reqadd", "reqallow", "reqdel", "reqdeny", "reqiallow",
-    "reqidel", "reqideny", "reqipass", "reqirep", "reqisetbe", "reqitarpit",
-    "reqpass", "reqrep", "reqsetbe", "reqtarpit", "rspadd", "rspdel",
+    "acl", "block", "force-persist", "http-request", "http-response", "id",
+    "ignore-persist", "redirect", "reqadd", "reqallow", "reqdel", "reqdeny",
+    "reqiallow", "reqidel", "reqideny", "reqipass", "reqirep", "reqisetbe",
+    "reqitarpit", "reqpass", "reqrep", "reqsetbe", "reqtarpit", "rspadd", "rspdel",
     "rspdeny", "rspidel", "rspideny", "rspirep", "rsprep", "tcp-request content",
     "tcp-request inspect-delay"
   ],
@@ -64,7 +67,7 @@
     "option originalto", "option splice-auto", "option splice-request",
     "option splice-response", "option tcpka", "option tcplog",
     "timeout http-keep-alive", "timeout http-request", "timeout tarpit",
-    "log-format"
+    "log-format", "option http-keep-alive", "option http-tunnel"
   ],
   "62": [ "log" ],
   "66": [ "user" ]
