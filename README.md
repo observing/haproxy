@@ -37,30 +37,19 @@ wget http://www.haproxy.org/download/1.5/src/haproxy-1.5.12.tar.gz
 tar xzvf haproxy-1.5.12.tar.gz
 cd haproxy-1.5.12
 
-# On OSX, see below for different OS.
+# On OSX, see below for different OS, after verify that
+# haproxy is installed and has the correct version.
 sudo make TARGET=generic USE_OPENSSL=1
 sudo make install
+haproxy -v
 
-# Create config file haproxy.cfg, see below for details.
-echo 'global\n\r  stats socket /tmp/haproxy.sock level admin' > haproxy.cfg
-
-# Start haproxy
-/path/to/haproxy
-
+# Finally run the tests
 npm test
 ```
 
 - For Linux run: `make TARGET=linux26 USE_OPENSSL=1`
 - For Solaris/Smart OS: `make TARGET=solaris USE_OPENSSL=1`
 - For OSX: `make TARGET=generic USE_OPENSSL=1`
-
-And finally run:
-
-```
-npm install
-sudo make install
-npm test
-```
 
 ## haproxy.cfg
 
