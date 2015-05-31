@@ -51,6 +51,7 @@ haproxy -v
 # Finally run the tests in the github repository
 git clone git@github.com:observing/haproxy.git
 cd haproxy
+npm install
 npm test
 ```
 
