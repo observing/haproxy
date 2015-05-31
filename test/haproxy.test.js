@@ -20,7 +20,7 @@ describe('haproxy', function () {
     , servers
     , server;
 
-  chai.Assertion.includeStack = true;
+  chai.config.includeStack = true;
 
   //
   // Create a mockup server that responds with identical output as the HAProxy.

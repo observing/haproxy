@@ -4,7 +4,12 @@ are hooked up on the API's yet. Feel free to contribute and build the best
 HAProxy orchestration module out there.
 ```
 
-[![Build Status](https://travis-ci.org/observing/haproxy.png?branch=master)](https://travis-ci.org/observing/haproxy)
+[![Version npm][version]](http://browsenpm.org/package/haproxy)[![Build Status][build]](https://travis-ci.org/observing/haproxy)[![Dependencies][david]](https://david-dm.org/observing/haproxy)[![Coverage Status][cover]](https://coveralls.io/r/observing/haproxy?branch=master)
+
+[version]: http://img.shields.io/npm/v/haproxy.svg?style=flat-square
+[build]: http://img.shields.io/travis/observing/haproxy/master.svg?style=flat-square
+[david]: https://img.shields.io/david/observing/haproxy.svg?style=flat-square
+[cover]: http://img.shields.io/coveralls/observing/haproxy/master.svg?style=flat-square
 
 # haproxy
 
@@ -19,7 +24,8 @@ running as a daemon.
 
 ## Installation
 
-The package is released in `npm`, the Node.js package registry:
+The package is released in `npm`, the Node.js package registry. To add it as a
+dependency to any project, do:
 
 ```
 npm install haproxy --save
@@ -28,28 +34,29 @@ npm install haproxy --save
 ## Testing
 
 Tests can be executed after installation by running `npm test`. For test to run
-properly *Haproxy 1.5.1* or greater is required. See commands below:
+properly *Haproxy 1.5.12* or greater is required. See commands below:
 
-```
+```bash
 sudo apt-get install -qq build-essential libssl-dev libev-dev
-wget http://www.haproxy.org/download/1.5/src/haproxy-1.5.1.tar.gz
-tar xzvf haproxy-1.5.1.tar.gz
-cd haproxy-1.5.1
-sudo make install
+wget http://www.haproxy.org/download/1.5/src/haproxy-1.5.12.tar.gz
+tar xzvf haproxy-1.5.12.tar.gz
+cd haproxy-1.5.12
 
+# Build haproxy on OSX, see below for different OS, after verify that
+# haproxy is installed and has the correct version.
+sudo make TARGET=generic USE_OPENSSL=1
+sudo make install
+haproxy -v
+
+# Finally run the tests in the github repository
+git clone git@github.com:observing/haproxy.git
+cd haproxy
 npm test
 ```
 
 - For Linux run: `make TARGET=linux26 USE_OPENSSL=1`
 - For Solaris/Smart OS: `make TARGET=solaris USE_OPENSSL=1`
-- For Mac: `make TARGET=generic USE_OPENSSL=1`
-
-And finally run:
-
-```
-sudo make install
-npm test
-```
+- For OSX: `make TARGET=generic USE_OPENSSL=1`
 
 ## haproxy.cfg
 

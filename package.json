@@ -1,23 +1,27 @@
 {
   "name": "haproxy",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "HAProxy management and orchestration module",
   "main": "index.js",
   "dependencies": {
     "dsv": "0.0.x",
-    "which": "1.0.x",
+    "which": "1.1.x",
     "mkdirp": "0.5.x"
   },
   "devDependencies": {
-    "pre-commit": "0.0.x",
-    "mocha": "1.21.x",
-    "sinon": "1.10.x",
-    "sinon-chai": "2.4.x",
-    "chai": "1.9.x",
-    "request": "2.42.x"
+    "istanbul": "0.3.x",
+    "pre-commit": "1.0.x",
+    "mocha": "2.2.x",
+    "sinon": "1.14.x",
+    "sinon-chai": "2.7.x",
+    "chai": "2.3.x",
+    "request": "2.56.x"
   },
   "scripts": {
-    "test": "NODE_ENV=testing ./node_modules/.bin/mocha $(find test -name '*.test.js')"
+    "test": "mocha --ui bdd --reporter spec ./test/*.test.js",
+    "coverage": "istanbul cover ./node_modules/.bin/_mocha -- ./test/*.test.js",
+    "test-travis": "istanbul cover node_modules/.bin/_mocha --report lcovonly -- ./test/*.test.js",
+    "sync": "VERSION=1.5 node ./test/config.sync.js"
   },
   "repository": {
     "type": "git",

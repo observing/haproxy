@@ -1,22 +1,36 @@
 language: node_js
-
-env:
-  - NODE_ENV=test
-
 node_js:
   - "0.10"
-  - "0.11"
-
+  - "0.12"
+  - "iojs"
+env:
+  matrix:
+    - "MASTER=false"
+    - "MASTER=true"
+git:
+  depth: 10
+before_install:
+  - "npm config set loglevel error"
 before_script:
   - sudo apt-get install -qq build-essential libssl-dev libev-dev
-  - wget http://www.haproxy.org/download/1.5/src/haproxy-1.5.1.tar.gz
-  - tar xzvf haproxy-1.5.1.tar.gz
-  - cd haproxy-1.5.1
+  - wget http://www.haproxy.org/download/1.5/src/haproxy-1.5.12.tar.gz
+  - tar xzvf haproxy-1.5.12.tar.gz
+  - cd haproxy-1.5.12
   - make TARGET=linux26 USE_OPENSSL=1
   - sudo make install
   - cd ..
-
+script:
+  - "npm run test-travis"
+after_script:
+  - "npm install coveralls@2.11.x && cat coverage/lcov.info | coveralls"
+matrix:
+  fast_finish: true
+  allow_failures:
+    - node_js: "iojs"
+    - env: "MASTER=true"
 notifications:
-  irc: "irc.freenode.org#observing"
-  on_success: change
-  on_failure: change
+  irc:
+    channels:
+      - "irc.freenode.org#observing"
+    on_success: change
+    on_failure: change

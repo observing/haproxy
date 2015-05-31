@@ -12,7 +12,8 @@ test/haproxy.pid
 #
 # ignore sublime project configuration for those who follow the
 # convention of naming the projects with the github names.
-# 
+#
 haproxy.sublime-project
 haproxy.sublime-workspace
 .tern-project
+coverage
