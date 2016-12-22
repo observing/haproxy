@@ -205,6 +205,12 @@ HAProxy.prototype.parse = function parse(using, buffer, fn, command) {
       delete row[''];
       return row;
     });
+  } else if (using === 'string') {
+    result = buffer.toString();
+  } else if (using === 'array') {
+    result = buffer.split('\n').map(function (line) { return line.trim(); });
+  } else if (typeof using === 'function') {
+    result = using(buffer);
   } else if (~buffer.indexOf('\n')) {
     result = buffer.split('\n').reduce(function reducer(data, line) {
       line = line.trim();
@@ -217,9 +223,12 @@ HAProxy.prototype.parse = function parse(using, buffer, fn, command) {
       //
       if ('object' === using) {
         var kv = line.split(':');
-
-        kv[1] = kv[1].trim();
-        data[kv[0]] = !isNaN(+kv[1]) ? +kv[1] : kv[1];
+        if(kv.length === 1) {
+          data[kv[0]] = '';
+        } else {
+          kv[1] = kv[1].trim();
+          data[kv[0]] = !isNaN(+kv[1]) ? +kv[1] : kv[1];
+        }
       }
 
       return data;
