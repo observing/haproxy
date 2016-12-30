@@ -22,6 +22,7 @@ module.exports = {
   'show info': read('showinfo'),
   'show stat': read('showstat'),
   'show stat -1 -1 -1': read('showstatall'),
+  'show stat parsed': require('./showstat-parsed'),
   'show sess': read('showsess'),
 
   'clear counters': read('empty'),
