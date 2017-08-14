@@ -13,7 +13,7 @@
     "pre-commit": "~1.2.0",
     "mocha": "~3.3.0",
     "sinon": "~1.17.6",
-    "sinon-chai": "~2.8.0",
+    "sinon-chai": "~2.13.0",
     "chai": "~3.5.0",
     "request": "~2.80.0"
   },
