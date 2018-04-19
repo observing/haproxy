@@ -11,7 +11,7 @@
   "devDependencies": {
     "istanbul": "~0.4.5",
     "pre-commit": "~1.2.0",
-    "mocha": "~3.3.0",
+    "mocha": "~5.1.1",
     "sinon": "~1.17.6",
     "sinon-chai": "~2.8.0",
     "chai": "~3.5.0",
