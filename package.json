@@ -15,7 +15,7 @@
     "sinon": "~1.17.6",
     "sinon-chai": "~2.8.0",
     "chai": "~3.5.0",
-    "request": "~2.80.0"
+    "request": "~2.88.0"
   },
   "scripts": {
     "test": "mocha --ui bdd --reporter spec ./test/*.test.js",
