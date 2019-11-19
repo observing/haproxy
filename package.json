@@ -5,7 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "dsv": "0.0.x",
-    "which": "~1.2.12",
+    "which": "~2.0.2",
     "mkdirp": "0.5.x"
   },
   "devDependencies": {
