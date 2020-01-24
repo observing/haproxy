@@ -6,7 +6,7 @@
   "dependencies": {
     "dsv": "0.0.x",
     "which": "~1.2.12",
-    "mkdirp": "0.5.x"
+    "mkdirp": "~1.0.1"
   },
   "devDependencies": {
     "istanbul": "~0.4.5",
